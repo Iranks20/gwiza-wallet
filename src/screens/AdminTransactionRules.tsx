@@ -1,5 +1,7 @@
 'use client'
 import React from 'react'
+import { useParams } from 'react-router'
+import { Link } from '@/lib'
 import Components from '../components'
 import { Plus } from 'lucide-react'
 
@@ -9,6 +11,7 @@ const rules = [
 ]
 
 export default function AdminTransactionRules({ country, embedded }: { country?: string; embedded?: boolean }) {
+  const { countryId, groupId } = useParams()
   const filtered = rules.filter(r => !country || r.country === country)
 
   const content = (
@@ -28,7 +31,7 @@ export default function AdminTransactionRules({ country, embedded }: { country?:
           <table className="min-w-full">
             <thead>
               <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
-                {['Name', 'Country', 'Source', 'Destination', 'Operation', 'Channel', 'Profile Group', 'Amount Range', 'Action', 'Priority', 'Status'].map(h => (
+                {['Name', 'Country', 'Source', 'Destination', 'Operation', 'Channel', 'Profile Group', 'Amount Range', 'Action', 'Priority', 'Status', 'Fees'].map(h => (
                   <th key={h} className="text-left px-4 py-3" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>
                     {h}
                   </th>
@@ -56,6 +59,15 @@ export default function AdminTransactionRules({ country, embedded }: { country?:
                   <td className="px-4 py-3"><span className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: '#F3F4F6', color: '#6B7280' }}>{r.priority}</span></td>
                   <td className="px-4 py-3">
                     <Components.StatusBadge status={r.active} size="sm" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      to={countryId && groupId ? `/admin/settings/countries/${countryId}/configure/profile-type-groups/${groupId}/transaction-rules/${r.id}/transaction-fees` : '#'}
+                      className="text-xs"
+                      style={{ color: '#37BBA2' }}
+                    >
+                      Fees
+                    </Link>
                   </td>
                 </tr>
               ))}

@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { Link, useParams } from 'react-router'
 import Components from '../components'
 import { Plus, Edit2 } from 'lucide-react'
 
@@ -10,6 +11,7 @@ const groups = [
 ]
 
 export default function AdminProfileGroups({ country, embedded }: { country?: string; embedded?: boolean }) {
+  const { countryId } = useParams()
   const filtered = groups.filter(g => !country || g.country === country)
 
   const content = (
@@ -29,7 +31,7 @@ export default function AdminProfileGroups({ country, embedded }: { country?: st
         <table className="w-full">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
-              {['Group Name', 'Country', 'Profile Type', 'Default', 'Status', 'Actions'].map(h => (
+              {['Group Name', 'Country', 'Profile Type', 'Default', 'Status', 'Actions', 'Navigate'].map(h => (
                 <th
                   key={h}
                   className="text-left px-4 py-3"
@@ -73,6 +75,13 @@ export default function AdminProfileGroups({ country, embedded }: { country?: st
                   >
                     <Edit2 size={14} />
                   </button>
+                </td>
+                <td className="px-4 py-3">
+                  {countryId ? (
+                    <Link to={`/admin/settings/countries/${countryId}/configure/profile-type-groups/${g.id}/permissions`} style={{ color: '#37BBA2', fontSize: 12 }}>
+                      Open
+                    </Link>
+                  ) : null}
                 </td>
               </tr>
             ))}

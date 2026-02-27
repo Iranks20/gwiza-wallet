@@ -151,7 +151,7 @@ export default function AdminCountries() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Link
-                        to={`/settings/countries/${c.alpha2}`}
+                        to={`/admin/settings/countries/${c.alpha2}/configure/kyc-tiers`}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
                         style={{ background: '#E8F8F5', color: '#037F67' }}
                       >

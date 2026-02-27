@@ -15,8 +15,8 @@ export default function AdminHealth() {
     <Components.AdminLayout>
       <div style={{ fontFamily: "'Poppins', sans-serif" }}>
         <Components.AdminPageHeader
-          title="System Health / Ready"
-          subtitle="Operational overview of core services powering the wallet"
+          title="System Health"
+          subtitle="Health endpoint state (/health) and service checks"
         />
 
         <div className="grid grid-cols-3 gap-4 mb-6">
@@ -78,6 +78,11 @@ export default function AdminHealth() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="rounded-xl border p-4 bg-white mt-4" style={{ borderColor: '#E5E7EB' }}>
+          <p className="text-sm font-medium mb-2" style={{ color: '#04304B' }}>Raw JSON</p>
+          <pre className="text-xs" style={{ color: '#04304B' }}>{JSON.stringify({ status: 'ok', checks }, null, 2)}</pre>
         </div>
       </div>
     </Components.AdminLayout>
