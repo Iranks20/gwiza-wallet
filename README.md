@@ -8,7 +8,7 @@ React + TypeScript + Vite frontend for Gwiza Wallet.
 - npm
 
 > If you were seeing `TypeError: crypto.getRandomValues is not a function` when starting Vite,
-> this repo now runs Vite through `scripts/vite-compat.mjs`, which patches missing `crypto.getRandomValues` support before loading Vite.
+> this repo now runs Vite with a preload patch (`scripts/crypto-patch.cjs`) plus `--experimental-global-webcrypto` to ensure `crypto.getRandomValues` is available in environments where Node exposes an incomplete crypto API.
 
 ## Install
 
@@ -56,6 +56,7 @@ node -v
 Use Node 20 LTS if possible, then reinstall dependencies:
 
 ```bash
-rm -rf node_modules package-lock.json
+rmdir /s /q node_modules
+del package-lock.json
 npm install
 ```
