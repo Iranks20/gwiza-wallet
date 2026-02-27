@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
-    "preview": "vite preview"
+    "dev": "node --experimental-global-webcrypto ./node_modules/vite/bin/vite.js",
+    "build": "tsc --noEmit -p tsconfig.app.json && node --experimental-global-webcrypto ./node_modules/vite/bin/vite.js build",
+    "preview": "node --experimental-global-webcrypto ./node_modules/vite/bin/vite.js preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
@@ -68,5 +68,8 @@
     "globals": "^15.15.0",
     "tw-animate-css": "^1.3.5",
     "typescript": "~5.7.2"
+  },
+  "engines": {
+    "node": ">=18.18.0"
   }
 }
