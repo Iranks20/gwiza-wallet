@@ -10,6 +10,10 @@ React + TypeScript + Vite frontend for Gwiza Wallet.
 > If you were seeing `TypeError: crypto.getRandomValues is not a function` when starting Vite,
 > this repo now runs Vite with a preload patch (`scripts/crypto-patch.cjs`) plus `--experimental-global-webcrypto` to ensure `crypto.getRandomValues` is available in environments where Node exposes an incomplete crypto API.
 
+> Note: Vite config intentionally avoids `@tailwindcss/vite` to prevent Windows optional native binding failures (`@tailwindcss/oxide`).
+> Tailwind directives are still kept in `src/index.css`, but startup does not depend on the oxide plugin path.
+
+
 ## Install
 
 ```bash
