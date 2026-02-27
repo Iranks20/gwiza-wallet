@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node --experimental-global-webcrypto ./node_modules/vite/bin/vite.js",
-    "build": "tsc --noEmit -p tsconfig.app.json && node --experimental-global-webcrypto ./node_modules/vite/bin/vite.js build",
-    "preview": "node --experimental-global-webcrypto ./node_modules/vite/bin/vite.js preview"
+    "dev": "node ./scripts/vite-compat.mjs",
+    "build": "tsc --noEmit -p tsconfig.app.json && node ./scripts/vite-compat.mjs build",
+    "preview": "node ./scripts/vite-compat.mjs preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
