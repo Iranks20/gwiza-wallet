@@ -1,13 +1,12 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Link } from '@/lib'
-import { useLocation, useNavigate } from 'react-router'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import {
   LayoutDashboard, Globe, DollarSign, ArrowLeftRight, Radio,
   Shield, Users, Group, Key, Settings2, Sliders, FileText,
   Receipt, Building2, BookOpen, Wallet, ClipboardList, ScrollText,
   Activity, ChevronDown, ChevronRight, Bell, Search, User,
-  LogOut, ChevronLeft, Menu, AlertCircle, CheckCircle
+  LogOut, ChevronLeft, Menu, AlertCircle, CheckCircle, Heart, Zap
 } from 'lucide-react'
 
 interface NavItem {
@@ -18,48 +17,41 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', icon: <LayoutDashboard size={18} />, to: '/AdminDashboard' },
-  {
-    label: 'Accounting',
-    icon: <BookOpen size={18} />,
-    children: [
-      { label: 'Fees Ledger', to: '/AdminFeesLedger' },
-    ],
-  },
-  {
-    label: 'Operations',
-    icon: <Activity size={18} />,
-    children: [
-      { label: 'Wallets', to: '/AdminWallets' },
-      { label: 'Transaction Register', to: '/AdminTransactionRegister' },
-      { label: 'Audit Logs', to: '/AdminAuditLogs' },
-    ],
-  },
+  { label: 'Dashboard', icon: <LayoutDashboard size={18} />, to: '/admin/dashboard' },
   {
     label: 'Settings',
     icon: <Sliders size={18} />,
     children: [
-      { label: 'Countries', to: '/AdminCountries' },
-      { label: 'Currencies', to: '/AdminCurrencies' },
-      { label: 'Transaction Operation Types', to: '/AdminOperationTypes' },
-      { label: 'Profile Permissions', to: '/AdminPermissions' },
+      { label: 'Countries', to: '/admin/settings/countries' },
+      { label: 'Currencies', to: '/admin/settings/currencies' },
+      { label: 'Transaction Operation Types', to: '/admin/settings/transaction-operation-types' },
+      { label: 'Profile Permissions', to: '/admin/settings/profile-permissions' },
+    ],
+  },
+  { label: 'Wallets', icon: <Wallet size={18} />, to: '/admin/wallets' },
+  {
+    label: 'Transactions',
+    icon: <Activity size={18} />,
+    children: [
+      { label: 'Transaction Register', to: '/admin/transactions/register' },
+      { label: 'Audit Logs', to: '/admin/transactions/audit-logs' },
+      { label: 'Fees Ledger', to: '/admin/transactions/fees-ledger' },
     ],
   },
   {
-    label: 'System',
+    label: 'System Health',
     icon: <CheckCircle size={18} />,
-    children: [{ label: 'Health / Ready', to: '/AdminHealth' }],
+    children: [
+      { label: 'Health', to: '/admin/system/health' },
+      { label: 'Ready', to: '/admin/system/ready' },
+    ],
   },
 ]
 
-interface AdminLayoutProps {
-  children: React.ReactNode
-  currentPath?: string
-}
-
-export default function AdminLayout({ children, currentPath }: AdminLayoutProps) {
+export default function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
+  const path = location.pathname
   const [collapsed, setCollapsed] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
   const [notifOpen, setNotifOpen] = useState(false)
@@ -71,9 +63,7 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
     )
   }
 
-  // auto-expand groups that contain the active route
   useEffect(() => {
-    const path = currentPath || location.pathname
     const groupsToExpand: string[] = []
     navItems.forEach(item => {
       if (!item.children) return
@@ -82,7 +72,7 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
       }
     })
     setExpandedGroups(prev => Array.from(new Set([...prev, ...groupsToExpand])))
-  }, [currentPath, location.pathname])
+  }, [path])
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#FAFBFC', fontFamily: "'Poppins', sans-serif" }}>
@@ -95,7 +85,6 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
           boxShadow: '2px 0 8px rgba(0,0,0,0.12)'
         }}
       >
-        {/* Logo */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
           {!collapsed && (
             <div className="flex items-center gap-2">
@@ -122,15 +111,12 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
           </button>
         )}
 
-        {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin">
           {navItems.map(item => {
-            const isDirectActive = item.to && (currentPath || location.pathname).startsWith(item.to)
+            const isDirectActive = item.to && path.startsWith(item.to)
             const isSectionActive =
               !item.to &&
-              item.children?.some(child =>
-                (currentPath || location.pathname).startsWith(child.to)
-              )
+              item.children?.some(child => path.startsWith(child.to))
             return (
               <div key={item.label}>
                 {item.to ? (
@@ -177,12 +163,8 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
                           style={{
                             fontSize: 12,
                             fontWeight: 400,
-                            color: (currentPath || location.pathname).startsWith(child.to)
-                              ? '#FFFFFF'
-                              : 'rgba(255,255,255,0.7)',
-                            background: (currentPath || location.pathname).startsWith(child.to)
-                              ? 'rgba(255,255,255,0.10)'
-                              : 'transparent',
+                            color: path.startsWith(child.to) ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
+                            background: path.startsWith(child.to) ? 'rgba(255,255,255,0.10)' : 'transparent',
                           }}
                         >
                           <span className="w-1 h-1 rounded-full bg-current shrink-0" />
@@ -193,11 +175,11 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
                   )}
                 </>
               )}
-            </div>
-          )})}
+              </div>
+            )
+          })}
         </nav>
 
-        {/* Bottom user */}
         {!collapsed && (
           <div className="border-t border-white/10 p-4">
             <div className="flex items-center gap-3">
@@ -220,11 +202,8 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
         )}
       </aside>
 
-      {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
         <header className="h-16 flex items-center gap-4 px-6 border-b shrink-0" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          {/* Search */}
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
@@ -245,7 +224,6 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
           </div>
 
           <div className="flex items-center gap-3 ml-auto">
-            {/* Notifications */}
             <div className="relative">
               <button
                 onClick={() => setNotifOpen(!notifOpen)}
@@ -260,9 +238,9 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
                     <h3 className="font-semibold text-sm" style={{ color: '#04304B' }}>Notifications</h3>
                   </div>
                   {[
-                    { msg: '5 transactions flagged by rules', time: '2m ago', type: 'warning' },
-                    { msg: 'New KYC submission: WLT-00821', time: '14m ago', type: 'info' },
-                    { msg: 'System health check passed', time: '1h ago', type: 'success' },
+                    { msg: '5 transactions flagged by rules', time: '2m ago' },
+                    { msg: 'New KYC submission: WLT-00821', time: '14m ago' },
+                    { msg: 'System health check passed', time: '1h ago' },
                   ].map((n, i) => (
                     <div key={i} className="p-4 border-b hover:bg-gray-50 cursor-pointer" style={{ borderColor: '#E5E7EB' }}>
                       <p className="text-xs font-medium" style={{ color: '#04304B' }}>{n.msg}</p>
@@ -273,7 +251,6 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
               )}
             </div>
 
-            {/* Profile */}
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
@@ -290,11 +267,7 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
                   {['My Profile', 'Settings', 'Sign Out'].map((item, i) => (
                     <button
                       key={i}
-                      onClick={() => {
-                        if (item === 'Sign Out') {
-                          navigate('/auth')
-                        }
-                      }}
+                      onClick={() => { if (item === 'Sign Out') navigate('/auth') }}
                       className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 cursor-pointer transition-colors"
                       style={{ color: '#04304B', fontSize: 13 }}
                     >
@@ -307,9 +280,8 @@ export default function AdminLayout({ children, currentPath }: AdminLayoutProps)
           </div>
         </header>
 
-        {/* Content */}
         <main className="flex-1 overflow-auto p-6" style={{ background: '#FAFBFC' }}>
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>

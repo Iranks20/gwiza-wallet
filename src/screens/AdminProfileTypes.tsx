@@ -87,6 +87,6 @@ export default function AdminProfileTypes({ country, embedded }: { country?: str
   )
 
   if (embedded) return content
-  return <Components.AdminLayout>{content}</Components.AdminLayout>
+  return content
 }
 

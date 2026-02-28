@@ -1,15 +1,17 @@
 'use client'
 import React from 'react'
 import Components from '../components'
-import { Plus } from 'lucide-react'
+import { Link } from '@/lib'
+import { Plus, Receipt } from 'lucide-react'
 
 const rules = [
   { id: 1, country: 'Kenya', name: 'P2P Domestic', srcCountry: 'Kenya', dstCountry: 'Kenya', opType: 'P2P', channel: 'MOBILE_MONEY', group: 'Retail - Default', min: '10', max: '100,000', action: 'allow', priority: 10, active: 'active' },
   { id: 2, country: 'Nigeria', name: 'High Value Review', srcCountry: 'Nigeria', dstCountry: 'Nigeria', opType: 'P2P', channel: 'BANK_TRANSFER', group: 'Agents - Tier 2', min: '500,000', max: '5,000,000', action: 'deny', priority: 1, active: 'active' },
 ]
 
-export default function AdminTransactionRules({ country, embedded }: { country?: string; embedded?: boolean }) {
+export default function AdminTransactionRules({ country, embedded, configureBasePath }: { country?: string; embedded?: boolean; configureBasePath?: string }) {
   const filtered = rules.filter(r => !country || r.country === country)
+  const showFeesLink = Boolean(embedded && configureBasePath)
 
   const content = (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -28,7 +30,7 @@ export default function AdminTransactionRules({ country, embedded }: { country?:
           <table className="min-w-full">
             <thead>
               <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
-                {['Name', 'Country', 'Source', 'Destination', 'Operation', 'Channel', 'Profile Group', 'Amount Range', 'Action', 'Priority', 'Status'].map(h => (
+                {['Name', 'Country', 'Source', 'Destination', 'Operation', 'Channel', 'Profile Group', 'Amount Range', 'Action', 'Priority', 'Status', ...(showFeesLink ? ['Fees'] : [])].map(h => (
                   <th key={h} className="text-left px-4 py-3" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>
                     {h}
                   </th>
@@ -57,6 +59,18 @@ export default function AdminTransactionRules({ country, embedded }: { country?:
                   <td className="px-4 py-3">
                     <Components.StatusBadge status={r.active} size="sm" />
                   </td>
+                  {showFeesLink && (
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`${configureBasePath}/transaction-rules/${r.id}/transaction-fees`}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
+                        style={{ background: '#E8F8F5', color: '#037F67' }}
+                      >
+                        <Receipt size={12} />
+                        Fees
+                      </Link>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -65,7 +79,6 @@ export default function AdminTransactionRules({ country, embedded }: { country?:
     </div>
   )
 
-  if (embedded) return content
-  return <Components.AdminLayout>{content}</Components.AdminLayout>
+  return content
 }
 

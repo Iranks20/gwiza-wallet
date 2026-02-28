@@ -45,8 +45,7 @@ const kpis = [
 
 export default function AdminDashboard() {
   return (
-    <Components.AdminLayout currentPath="/AdminDashboard">
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
         {/* Header */}
         <div className="mb-6">
           <h1 className="font-bold" style={{ color: '#04304B', fontSize: 24 }}>Dashboard</h1>
@@ -120,7 +119,7 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
-            <Link to="/AdminHealth">
+            <Link to="/admin/system/health">
               <button className="mt-4 w-full py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors hover:opacity-90" style={{ background: '#E8F8F5', color: '#37BBA2', fontSize: 13 }}>
                 View Full Health Report
               </button>
@@ -134,7 +133,7 @@ export default function AdminDashboard() {
           <div className="rounded-xl border" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: '#E5E7EB' }}>
               <h3 className="font-semibold" style={{ color: '#04304B', fontSize: 15 }}>Recent Transactions</h3>
-              <Link to="/AdminTransactionRegister">
+              <Link to="/admin/transactions/register">
                 <button className="flex items-center gap-1 text-xs font-medium cursor-pointer" style={{ color: '#37BBA2' }}>
                   View all <ExternalLink size={11} />
                 </button>
@@ -160,7 +159,7 @@ export default function AdminDashboard() {
           <div className="rounded-xl border" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: '#E5E7EB' }}>
               <h3 className="font-semibold" style={{ color: '#04304B', fontSize: 15 }}>Recent Audit Actions</h3>
-              <Link to="/AdminAuditLogs">
+              <Link to="/admin/transactions/audit-logs">
                 <button className="flex items-center gap-1 text-xs font-medium cursor-pointer" style={{ color: '#37BBA2' }}>
                   View all <ExternalLink size={11} />
                 </button>
@@ -189,6 +188,5 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </Components.AdminLayout>
   )
 }

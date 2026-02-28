@@ -105,6 +105,6 @@ export default function AdminGroupPermissions({ country, embedded }: { country?:
   )
 
   if (embedded) return content
-  return <Components.AdminLayout>{content}</Components.AdminLayout>
+  return content
 }
 

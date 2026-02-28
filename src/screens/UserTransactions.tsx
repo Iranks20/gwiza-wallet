@@ -1,5 +1,6 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react'
+import { Link } from '@/lib'
 import Components from '../components'
 
 const rows = [
@@ -9,9 +10,31 @@ const rows = [
 ]
 
 export default function UserTransactions() {
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+
+  const filtered = rows.filter(r => {
+    const matchDateFrom = !dateFrom || r.date >= dateFrom
+    const matchDateTo = !dateTo || r.date <= dateTo
+    const matchStatus = statusFilter === 'all' || r.status === statusFilter
+    return matchDateFrom && matchDateTo && matchStatus
+  })
+
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <h1 className="font-semibold mb-3" style={{ color: '#04304B', fontSize: 18 }}>Transactions</h1>
+      <h1 className="font-semibold mb-3" style={{ color: '#04304B', fontSize: 18 }}>Transaction History</h1>
+
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="px-3 py-2 border rounded-lg text-sm outline-none" style={{ borderColor: '#E5E7EB', color: '#04304B' }} />
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="px-3 py-2 border rounded-lg text-sm outline-none" style={{ borderColor: '#E5E7EB', color: '#04304B' }} />
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 border rounded-lg text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', color: '#04304B' }}>
+          <option value="all">All Status</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+        </select>
+        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{filtered.length} results</span>
+      </div>
 
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
         <table className="w-full">
@@ -25,10 +48,10 @@ export default function UserTransactions() {
             </tr>
           </thead>
           <tbody>
-            {rows.map(r => (
-              <tr key={r.id} className="border-b" style={{ borderColor: '#F3F4F6' }}>
+            {filtered.map(r => (
+              <tr key={r.id} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
                 <td className="px-3 py-2">
-                  <span className="font-mono" style={{ color: '#04304B', fontSize: 11 }}>{r.id}</span>
+                  <Link to={`/user/transactions/${r.id}`} className="font-mono cursor-pointer" style={{ color: '#37BBA2', fontSize: 11 }}>{r.id}</Link>
                 </td>
                 <td className="px-3 py-2">
                   <span style={{ color: '#04304B', fontSize: 13 }}>{r.type}</span>

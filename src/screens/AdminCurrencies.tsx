@@ -89,8 +89,7 @@ export default function AdminCurrencies() {
   })
 
   return (
-    <Components.AdminLayout>
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
         <Components.AdminPageHeader
           title="Currencies"
           subtitle="Manage supported currencies across the platform"
@@ -168,7 +167,6 @@ export default function AdminCurrencies() {
             </div>
           </div>
         )}
-      </div>
-    </Components.AdminLayout>
+    </div>
   )
 }

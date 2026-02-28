@@ -51,6 +51,6 @@ export default function AdminSystemAccounts({ country, embedded }: { country?: s
   )
 
   if (embedded) return content
-  return <Components.AdminLayout>{content}</Components.AdminLayout>
+  return content
 }
 

@@ -146,8 +146,7 @@ export default function AdminWallets() {
   })
 
   return (
-    <Components.AdminLayout>
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
         <Components.AdminPageHeader title="Wallets" subtitle="Search and manage wallet accounts across the platform" />
 
         {/* Search Bar */}
@@ -227,7 +226,11 @@ export default function AdminWallets() {
                   <td className="px-4 py-3"><span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: '#E8F8F5', color: '#37BBA2', fontSize: 11 }}>{w.kycTier}</span></td>
                   <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{w.profileType}</span></td>
                   <td className="px-4 py-3"><Components.StatusBadge status={w.status} size="sm" /></td>
-                  <td className="px-4 py-3"><Eye size={14} style={{ color: '#37BBA2' }} /></td>
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <Link to={`/admin/wallets/${w.id}`} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer" style={{ background: '#E8F8F5', color: '#037F67' }}>
+                      <Eye size={12} /> View
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -245,6 +248,5 @@ export default function AdminWallets() {
 
         {selectedWallet && <WalletDetailModal wallet={selectedWallet} onClose={() => setSelectedWallet(null)} />}
       </div>
-    </Components.AdminLayout>
   )
 }

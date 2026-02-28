@@ -17,7 +17,7 @@ export default function AdminLogin() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (email === DEMO_ADMIN_EMAIL && password === DEMO_ADMIN_PASSWORD) {
-      navigate('/AdminDashboard')
+      navigate('/admin/dashboard')
     } else {
       setError('Invalid admin credentials. Use admin@fintech.io / Admin123!')
     }

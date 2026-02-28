@@ -64,6 +64,7 @@ function TxnDetailModal({ txn, onClose }: { txn: typeof transactions[0]; onClose
 
 export default function AdminTransactionRegister() {
   const [search, setSearch] = useState('')
+  const [walletIdFilter, setWalletIdFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedTxn, setSelectedTxn] = useState<typeof transactions[0] | null>(null)
   const [dateFrom, setDateFrom] = useState('')
@@ -72,13 +73,15 @@ export default function AdminTransactionRegister() {
   const filtered = transactions.filter(t => {
     const q = search.toLowerCase()
     const match = !search || t.id.toLowerCase().includes(q) || t.sourceWallet.toLowerCase().includes(q) || t.destWallet.toLowerCase().includes(q) || t.ref.toLowerCase().includes(q)
+    const matchWallet = !walletIdFilter || t.sourceWallet.toLowerCase().includes(walletIdFilter.toLowerCase()) || t.destWallet.toLowerCase().includes(walletIdFilter.toLowerCase())
     const matchStatus = statusFilter === 'all' || t.status === statusFilter
-    return match && matchStatus
+    const matchDateFrom = !dateFrom || t.date >= dateFrom
+    const matchDateTo = !dateTo || t.date <= dateTo
+    return match && matchWallet && matchStatus && matchDateFrom && matchDateTo
   })
 
   return (
-    <Components.AdminLayout>
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
         <Components.AdminPageHeader title="Transaction Register" subtitle="Full ledger of all platform transactions"
           secondaryAction={{ label: 'Export CSV', onClick: () => {}, icon: <Download size={14} /> }}
         />
@@ -87,11 +90,12 @@ export default function AdminTransactionRegister() {
         <div className="flex items-center gap-3 mb-5 flex-wrap">
           <div className="relative flex-1 min-w-48">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search txn ID, wallet, reference..."
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search txn ID, reference..."
               className="w-full pl-9 pr-4 py-2 border rounded-lg outline-none text-sm transition-all"
               style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
               onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
           </div>
+          <input value={walletIdFilter} onChange={e => setWalletIdFilter(e.target.value)} placeholder="Wallet ID" className="px-3 py-2 border rounded-lg text-sm outline-none w-28" style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }} />
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 border rounded-lg text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }}>
             <option value="all">All Status</option>
             <option value="completed">Completed</option>
@@ -151,6 +155,5 @@ export default function AdminTransactionRegister() {
 
         {selectedTxn && <TxnDetailModal txn={selectedTxn} onClose={() => setSelectedTxn(null)} />}
       </div>
-    </Components.AdminLayout>
   )
 }

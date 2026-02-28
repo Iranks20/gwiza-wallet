@@ -188,5 +188,5 @@ export default function AdminChannels({ country, embedded }: { country?: string;
   )
 
   if (embedded) return content
-  return <Components.AdminLayout>{content}</Components.AdminLayout>
+  return content
 }

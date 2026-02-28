@@ -29,13 +29,13 @@ export default function AuthSplash() {
 
     if (isAdmin) {
       if (adminEmail === DEMO_ADMIN_EMAIL && adminPassword === DEMO_ADMIN_PASSWORD) {
-        navigate('/AdminDashboard')
+        navigate('/admin/dashboard')
       } else {
         setError('Invalid admin credentials. Use admin@fintech.io / Admin123!')
       }
     } else {
       if (userId === DEMO_USER_IDENTIFIER && userPassword === DEMO_USER_PASSWORD) {
-        navigate('/user/home')
+        navigate('/user/overview')
       } else {
         setError('Invalid wallet credentials. Use +250781234567 / User123!')
       }

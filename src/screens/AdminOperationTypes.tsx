@@ -94,8 +94,7 @@ export default function AdminOperationTypes() {
   })
 
   return (
-    <Components.AdminLayout>
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
         <Components.AdminPageHeader
           title="Transaction Operation Types"
           subtitle="Define and manage transaction operation types"
@@ -159,7 +158,6 @@ export default function AdminOperationTypes() {
         </div>
 
         {drawer.open && <OpTypeDrawer item={drawer.item} onClose={() => setDrawer({ open: false })} onSave={item => { setData(prev => drawer.item ? prev.map(x => x.id === drawer.item?.id ? item : x) : [...prev, item]); setDrawer({ open: false }) }} />}
-      </div>
-    </Components.AdminLayout>
+    </div>
   )
 }

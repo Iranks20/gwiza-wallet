@@ -12,12 +12,11 @@ const checks = [
 
 export default function AdminHealth() {
   return (
-    <Components.AdminLayout>
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
-        <Components.AdminPageHeader
-          title="System Health / Ready"
-          subtitle="Operational overview of core services powering the wallet"
-        />
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <Components.AdminPageHeader
+        title="Health"
+        subtitle="Operational overview of core services — status indicator and raw response (stub)"
+      />
 
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="rounded-xl p-5 border" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
@@ -79,8 +78,14 @@ export default function AdminHealth() {
             </tbody>
           </table>
         </div>
+
+      <div className="rounded-xl border p-5 mt-4" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
+        <p className="text-sm font-medium mb-2" style={{ color: '#04304B' }}>Raw response (stub)</p>
+        <pre className="p-4 rounded-lg text-xs overflow-auto max-h-48" style={{ background: '#FAFBFC', color: '#04304B', border: '1px solid #E5E7EB' }}>
+          {JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString(), checks: checks.map(c => ({ name: c.name, status: c.status, latency: c.latency })) }, null, 2)}
+        </pre>
       </div>
-    </Components.AdminLayout>
+    </div>
   )
 }
 

@@ -1,7 +1,9 @@
 'use client'
 import React from 'react'
+import { useParams } from 'react-router'
 import Components from '../components'
-import { Plus, Edit2 } from 'lucide-react'
+import { Link } from '@/lib'
+import { Plus, Edit2, Settings2 } from 'lucide-react'
 
 const groups = [
   { id: 1, name: 'Retail - Default', country: 'Kenya', profileType: 'Personal', isDefault: true, status: 'active' },
@@ -10,7 +12,9 @@ const groups = [
 ]
 
 export default function AdminProfileGroups({ country, embedded }: { country?: string; embedded?: boolean }) {
+  const { countryId } = useParams<{ countryId?: string }>()
   const filtered = groups.filter(g => !country || g.country === country)
+  const configureBase = countryId ? `/admin/settings/countries/${countryId}/configure/profile-type-groups` : ''
 
   const content = (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -67,12 +71,24 @@ export default function AdminProfileGroups({ country, embedded }: { country?: st
                   <Components.StatusBadge status={g.status} size="sm" />
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer"
-                    style={{ color: '#37BBA2' }}
-                  >
-                    <Edit2 size={14} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {configureBase && (
+                      <Link
+                        to={`${configureBase}/${g.id}/permissions`}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
+                        style={{ background: '#E8F8F5', color: '#037F67' }}
+                      >
+                        <Settings2 size={12} />
+                        Configure
+                      </Link>
+                    )}
+                    <button
+                      className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer"
+                      style={{ color: '#37BBA2' }}
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -83,6 +99,6 @@ export default function AdminProfileGroups({ country, embedded }: { country?: st
   )
 
   if (embedded) return content
-  return <Components.AdminLayout>{content}</Components.AdminLayout>
+  return content
 }
 

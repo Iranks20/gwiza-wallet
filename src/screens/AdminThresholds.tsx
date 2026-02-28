@@ -57,6 +57,6 @@ export default function AdminThresholds({ country, embedded }: { country?: strin
   )
 
   if (embedded) return content
-  return <Components.AdminLayout>{content}</Components.AdminLayout>
+  return content
 }
 

@@ -88,8 +88,7 @@ export default function AdminCountries() {
   })
 
   return (
-    <Components.AdminLayout>
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
         <Components.AdminPageHeader
           title="Countries"
           subtitle="Manage reference country data for the platform"
@@ -151,7 +150,7 @@ export default function AdminCountries() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Link
-                        to={`/settings/countries/${c.alpha2}`}
+                        to={`/admin/settings/countries/${c.id}/configure/kyc-tiers`}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
                         style={{ background: '#E8F8F5', color: '#037F67' }}
                       >
@@ -181,6 +180,5 @@ export default function AdminCountries() {
 
         <CountryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} country={editCountry} />
       </div>
-    </Components.AdminLayout>
   )
 }

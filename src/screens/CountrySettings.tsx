@@ -69,8 +69,7 @@ export default function CountrySettings() {
   }
 
   return (
-    <Components.AdminLayout>
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
         <Components.AdminPageHeader
           title={`Settings · ${countryCode}`}
           subtitle="Configure limits, rules, fees and structures for this country"
@@ -102,8 +101,7 @@ export default function CountrySettings() {
         <div>
           {renderContent()}
         </div>
-      </div>
-    </Components.AdminLayout>
+    </div>
   )
 }
 

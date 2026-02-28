@@ -17,7 +17,7 @@ export default function UserLogin() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (identifier === DEMO_USER_IDENTIFIER && password === DEMO_USER_PASSWORD) {
-      navigate('/user/home')
+      navigate('/user/overview')
     } else {
       setError('Invalid wallet credentials. Use +250781234567 / User123!')
     }
