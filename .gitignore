@@ -49,6 +49,9 @@ Thumbs.db
 .idea/
 *.sublime-workspace
 *.sublime-project
+.cursor/
+
+docs/
 
 # Package manager caches
 .pnpm-store/

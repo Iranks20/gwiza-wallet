@@ -1,7 +1,3 @@
-/**
- * Transaction Operation Types API – /txnoptypes/
- */
-
 import { apiClient, ApiError } from './client'
 
 export type TxnOpTypeDto = {
@@ -17,7 +13,6 @@ export type TxnOpTypeDto = {
   last_update_by?: string
 }
 
-/** App-facing type (id can be number from API). */
 export type OperationType = {
   id: number | string
   code: string
@@ -26,6 +21,7 @@ export type OperationType = {
   tag: string
   description: string
   status: string
+  date_created?: string
 }
 
 function dtoToOpType(d: TxnOpTypeDto): OperationType {
@@ -37,6 +33,7 @@ function dtoToOpType(d: TxnOpTypeDto): OperationType {
     tag: d.operation_type_tag,
     description: d.operation_type_description ?? '',
     status: d.operation_type_is_active ? 'active' : 'inactive',
+    date_created: d.date_created,
   }
 }
 
@@ -72,11 +69,14 @@ export const txnoptypesApi = {
   },
 
   async create(data: { name: string; description?: string; direction: string; tag: string; status: string }): Promise<OperationType> {
+    const direction = data.direction === 'on_us' || data.direction === 'off_us' ? data.direction : 'on_us'
+    const tag = String(data.tag ?? '').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '') || 'default_tag'
+    const description = (data.description ?? '').trim() || 'No description'
     const res = await apiClient.post<TxnOpTypeDto>('/txnoptypes/', {
       operation_type_name: data.name,
-      operation_type_description: data.description ?? null,
-      operation_type_direction: data.direction,
-      operation_type_tag: data.tag,
+      operation_type_description: description,
+      operation_type_direction: direction,
+      operation_type_tag: tag,
       operation_type_is_active: data.status === 'active',
     })
     const d = res.data
@@ -89,8 +89,8 @@ export const txnoptypesApi = {
       const body: Record<string, unknown> = {}
       if (data.name !== undefined) body.operation_type_name = data.name
       if (data.description !== undefined) body.operation_type_description = data.description
-      if (data.direction !== undefined) body.operation_type_direction = data.direction
-      if (data.tag !== undefined) body.operation_type_tag = data.tag
+      if (data.direction !== undefined) body.operation_type_direction = (data.direction === 'on_us' || data.direction === 'off_us') ? data.direction : undefined
+      if (data.tag !== undefined) body.operation_type_tag = String(data.tag).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '') || undefined
       if (data.status !== undefined) body.operation_type_is_active = data.status === 'active'
       const res = await apiClient.put<TxnOpTypeDto>(`/txnoptypes/${id}`, body)
       const d = res.data

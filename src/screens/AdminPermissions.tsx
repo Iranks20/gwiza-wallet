@@ -10,10 +10,10 @@ import {
   removePermissionCatalog,
 } from '@/services/permissionsCatalogService'
 
-const emptyForm: Omit<PermissionCatalogItem, 'id'> = { code: '', scope: 'wallet', tag: 'read', description: '', status: 'active' }
+const emptyForm: Omit<PermissionCatalogItem, 'id'> = { code: '', scope: 'wallet', tag: 'read_only', description: '', status: 'active' }
 
-const SCOPES = ['wallet', 'fees', 'rules', 'transactions']
-const TAGS = ['read', 'write', 'admin']
+const SCOPES = ['wallet', 'fees_scope', 'rules', 'transactions']
+const TAGS = ['read_only', 'write', 'admin']
 
 interface PermissionDrawerProps {
   open: boolean
@@ -51,16 +51,17 @@ function PermissionDrawer({ open, onClose, permission, onSave }: PermissionDrawe
         </div>
         <div className="flex-1 overflow-auto p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Code</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Code (permission name)</label>
             <input
               value={form.code}
               onChange={e => setForm(f => ({ ...f, code: e.target.value }))}
-              placeholder="e.g. wallet.view"
+              placeholder="e.g. wallet.view (min 5 characters)"
               className="w-full px-3 py-2.5 border rounded-lg outline-none transition-all text-sm font-mono"
               style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
               onFocus={e => e.target.style.borderColor = '#37BBA2'}
               onBlur={e => e.target.style.borderColor = '#E5E7EB'}
             />
+            <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>Min 5, max 255 characters</p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Scope</label>
@@ -87,19 +88,6 @@ function PermissionDrawer({ open, onClose, permission, onSave }: PermissionDrawe
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Description</label>
-            <textarea
-              value={form.description}
-              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              placeholder="Brief description"
-              rows={2}
-              className="w-full px-3 py-2.5 border rounded-lg outline-none transition-all text-sm resize-none"
-              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
-              onFocus={e => e.target.style.borderColor = '#37BBA2'}
-              onBlur={e => e.target.style.borderColor = '#E5E7EB'}
-            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Status</label>
@@ -213,28 +201,25 @@ export default function AdminPermissions() {
         <table className="w-full">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
-              {['Code', 'Scope', 'Tag', 'Description', 'Status', 'Actions'].map(h => (
+              {['Name', 'Scope', 'Tag', 'Status', 'Actions'].map(h => (
                 <th key={h} className="text-left px-4 py-3" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</td></tr>
             ) : (
               permissions.map(p => (
               <tr key={p.id} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
                 <td className="px-4 py-3">
-                  <span className="font-mono font-semibold" style={{ color: '#37BBA2', fontSize: 12 }}>{p.code}</span>
+                  <span style={{ color: '#04304B', fontSize: 13, fontWeight: 500 }}>{p.code}</span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium uppercase" style={{ background: '#EFF6FF', color: '#1E40AF' }}>{p.scope}</span>
+                  <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium" style={{ background: '#EFF6FF', color: '#1E40AF' }}>{p.scope}</span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium capitalize" style={{ background: '#F3F4F6', color: '#374151' }}>{p.tag}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <span style={{ color: '#6B7280', fontSize: 13 }}>{p.description}</span>
+                  <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium" style={{ background: '#F3F4F6', color: '#374151' }}>{p.tag}</span>
                 </td>
                 <td className="px-4 py-3">
                   <Components.StatusBadge status={p.status} size="sm" />

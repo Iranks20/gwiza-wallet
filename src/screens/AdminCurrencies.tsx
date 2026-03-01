@@ -71,7 +71,6 @@ export default function AdminCurrencies() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
   const [drawer, setDrawer] = useState<{ open: boolean; item?: Currency }>({ open: false })
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
@@ -87,9 +86,7 @@ export default function AdminCurrencies() {
 
   const filtered = data.filter(c => {
     const q = search.toLowerCase()
-    const matchQ = !search || c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || (c.country && c.country.toLowerCase().includes(q))
-    const matchS = statusFilter === 'all' || c.status === statusFilter
-    return matchQ && matchS
+    return !search || c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)
   })
 
   const handleSave = async (c: { code: string; name: string }) => {
@@ -141,13 +138,9 @@ export default function AdminCurrencies() {
       <div className="flex items-center gap-3 mb-5">
         <div className="relative flex-1 max-w-sm">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search code, name..." className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search code or name..." className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
         </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2.5 border rounded-xl text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }}>
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
+        <span className="text-sm" style={{ color: '#9CA3AF', fontSize: 13 }}>{filtered.length} results</span>
       </div>
 
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
@@ -157,23 +150,19 @@ export default function AdminCurrencies() {
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
-              {['Code', 'Name', 'Symbol', 'Decimals', 'Country', 'Status', 'Actions'].map(h => (
+              {['Code', 'Name', 'Actions'].map(h => (
                 <th key={h} className="text-left px-5 py-3" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="px-5 py-8 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</td></tr>
+              <tr><td colSpan={3} className="px-5 py-8 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</td></tr>
             ) : (
               filtered.map((c) => (
                 <tr key={c.code} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
                   <td className="px-5 py-3"><span className="font-mono font-bold" style={{ color: '#37BBA2', fontSize: 13 }}>{c.code}</span></td>
                   <td className="px-5 py-3"><span style={{ color: '#04304B', fontSize: 13 }}>{c.name}</span></td>
-                  <td className="px-5 py-3"><span className="font-mono font-semibold" style={{ color: '#04304B', fontSize: 13 }}>{c.symbol || c.code}</span></td>
-                  <td className="px-5 py-3"><span className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: '#F3F4F6', color: '#6B7280' }}>{c.decimals}</span></td>
-                  <td className="px-5 py-3"><span style={{ color: '#6B7280', fontSize: 13 }}>{c.country || '—'}</span></td>
-                  <td className="px-5 py-3"><Components.StatusBadge status={c.status} size="sm" /></td>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
                       <button onClick={() => setDrawer({ open: true, item: c })} className="p-1.5 hover:bg-teal-50 rounded-lg cursor-pointer transition-colors" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>

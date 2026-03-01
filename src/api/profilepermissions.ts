@@ -1,7 +1,3 @@
-/**
- * Profile Permissions API – /profilepermissions/
- */
-
 import { apiClient, ApiError } from './client'
 
 export type ProfilePermissionDto = {
@@ -12,7 +8,6 @@ export type ProfilePermissionDto = {
   permission_is_active: boolean
 }
 
-/** App-facing type (code = permission_name in API). */
 export type ProfilePermission = {
   id: number
   code: string
@@ -65,10 +60,16 @@ export const profilepermissionsApi = {
   },
 
   async create(data: { code: string; scope: string; tag: string; description?: string; status: string }): Promise<ProfilePermission> {
+    const name = (data.code ?? '').trim()
+    const scope = (data.scope ?? '').trim()
+    const tag = (data.tag ?? '').trim()
+    if (name.length < 5 || scope.length < 5 || tag.length < 5) {
+      throw new ApiError('Code, Scope and Tag must be at least 5 characters', 400)
+    }
     const res = await apiClient.post<ProfilePermissionDto>('/profilepermissions/', {
-      permission_name: data.code,
-      permission_scope: data.scope,
-      permission_tag: data.tag,
+      permission_name: name,
+      permission_scope: scope,
+      permission_tag: tag,
       permission_is_active: data.status === 'active',
     })
     const d = res.data
@@ -79,9 +80,18 @@ export const profilepermissionsApi = {
   async update(id: number, data: Partial<{ code: string; scope: string; tag: string; description: string; status: string }>): Promise<ProfilePermission | null> {
     try {
       const body: Record<string, unknown> = {}
-      if (data.code !== undefined) body.permission_name = data.code
-      if (data.scope !== undefined) body.permission_scope = data.scope
-      if (data.tag !== undefined) body.permission_tag = data.tag
+      if (data.code !== undefined) {
+        const name = data.code.trim()
+        if (name.length >= 5) body.permission_name = name
+      }
+      if (data.scope !== undefined) {
+        const scope = data.scope.trim()
+        if (scope.length >= 5) body.permission_scope = scope
+      }
+      if (data.tag !== undefined) {
+        const tag = data.tag.trim()
+        if (tag.length >= 5) body.permission_tag = tag
+      }
       if (data.status !== undefined) body.permission_is_active = data.status === 'active'
       const res = await apiClient.put<ProfilePermissionDto>(`/profilepermissions/${id}`, body)
       const d = res.data

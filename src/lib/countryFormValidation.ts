@@ -1,8 +1,3 @@
-/**
- * Client-side validation for country (OPCO) create/edit form.
- * Matches Wallet+ API schema: minLength, maxLength, patterns.
- */
-
 export type CountryFormData = {
   name: string
   alpha2: string

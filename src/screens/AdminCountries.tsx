@@ -155,7 +155,7 @@ export default function AdminCountries() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editCountry, setEditCountry] = useState<Country | null>(null)
-  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [statusModal, setStatusModal] = useState<{ id: number; action: 'deactivate' | 'activate' } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -184,11 +184,14 @@ export default function AdminCountries() {
       setSaving(false)
     }
   }
-  const handleDelete = async () => {
-    if (deleteId != null) {
-      await removeCountry(deleteId)
+  const handleStatusChange = async () => {
+    if (statusModal == null) return
+    const ok = statusModal.action === 'deactivate'
+      ? await deactivateCountry(statusModal.id)
+      : await activateCountry(statusModal.id)
+    if (ok) {
       loadCountries()
-      setDeleteId(null)
+      setStatusModal(null)
     }
   }
 
@@ -213,7 +216,6 @@ export default function AdminCountries() {
           </div>
         )}
 
-        {/* Filters */}
         <div className="flex items-center gap-3 mb-5">
           <div className="relative flex-1 max-w-xs">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
@@ -240,7 +242,6 @@ export default function AdminCountries() {
           <span className="text-sm" style={{ color: '#9CA3AF', fontSize: 13 }}>{filtered.length} results</span>
         </div>
 
-        {/* Table – columns match API: country_name, flag, alpha2_code, alpha3_code, currency, calling_code, country_is_active */}
         <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           <table className="w-full">
             <thead>
@@ -285,13 +286,25 @@ export default function AdminCountries() {
                       >
                         <Edit2 size={14} />
                       </button>
-                      <button
-                        onClick={() => setDeleteId(c.id)}
-                        className="p-1.5 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
-                        style={{ color: '#F44336' }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      {c.status === 'active' ? (
+                        <button
+                          onClick={() => setStatusModal({ id: c.id, action: 'deactivate' })}
+                          className="p-1.5 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors"
+                          style={{ color: '#F59E0B' }}
+                          title="Deactivate"
+                        >
+                          <PowerOff size={14} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setStatusModal({ id: c.id, action: 'activate' })}
+                          className="p-1.5 rounded-lg hover:bg-green-50 cursor-pointer transition-colors"
+                          style={{ color: '#22C55E' }}
+                          title="Activate"
+                        >
+                          <Power size={14} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -302,11 +315,15 @@ export default function AdminCountries() {
 
         <CountryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} country={editCountry} onSave={handleSave} saving={saving} currencies={currencies} />
         <Components.ConfirmModal
-          open={deleteId != null}
-          title="Delete Country?"
-          message={<>Are you sure you want to delete this country? This action cannot be undone.</>}
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteId(null)}
+          open={statusModal != null}
+          title={statusModal?.action === 'deactivate' ? 'Deactivate Country?' : 'Activate Country?'}
+          message={statusModal?.action === 'deactivate'
+            ? <>Are you sure you want to deactivate this country? You can activate it again later.</>
+            : <>Are you sure you want to activate this country?</>
+          }
+          confirmLabel={statusModal?.action === 'deactivate' ? 'Deactivate' : 'Activate'}
+          onConfirm={handleStatusChange}
+          onCancel={() => setStatusModal(null)}
         />
       </div>
   )

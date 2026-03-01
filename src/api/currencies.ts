@@ -1,7 +1,3 @@
-/**
- * Currencies API – /currencies/
- */
-
 import { apiClient, ApiError } from './client'
 
 export type CurrencyDto = {
@@ -9,7 +5,6 @@ export type CurrencyDto = {
   name: string
 }
 
-/** App-facing currency (API only has code + name; UI may show defaults for symbol, decimals, country, status). */
 export type Currency = {
   code: string
   name: string
@@ -41,8 +36,6 @@ function extractListData(res: { data?: unknown }): CurrencyDto[] {
 
 export const currenciesApi = {
   async list(): Promise<{ items: Currency[]; pagination?: { page: number; limit: number; total: number; totalPages: number } }> {
-    // No query params: backend validates querystring/limit as integer and rejects string values.
-    // Rely on server defaults for pagination.
     const res = await apiClient.get<CurrencyDto[] | { data: CurrencyDto[] }>('/currencies/')
     const items = extractListData(res).map(dtoToCurrency)
     return { items, pagination: res.pagination }

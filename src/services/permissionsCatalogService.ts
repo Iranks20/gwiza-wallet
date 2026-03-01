@@ -1,7 +1,3 @@
-/**
- * Profile Permissions catalog – backed by Wallet+ /profilepermissions/ API.
- */
-
 import { profilepermissionsApi } from '@/api/profilepermissions'
 import type { ProfilePermission } from '@/api/profilepermissions'
 

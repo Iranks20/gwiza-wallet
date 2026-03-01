@@ -1,7 +1,3 @@
-/**
- * Transaction Operation Types service – backed by Wallet+ /txnoptypes/ API.
- */
-
 import { txnoptypesApi } from '@/api/txnoptypes'
 import type { OperationType } from '@/api/txnoptypes'
 

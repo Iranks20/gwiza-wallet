@@ -1,7 +1,3 @@
-/**
- * Countries service – backed by Wallet+ opcos API.
- */
-
 import { opcosApi } from '@/api/opcos'
 import type { Country } from '@/api/opcos'
 
@@ -32,13 +28,11 @@ export async function updateCountry(id: number, data: Partial<Country>): Promise
   return opcosApi.update(id, data)
 }
 
-/** Deactivate: set status to inactive (no DELETE in API). */
 export async function deactivateCountry(id: number): Promise<boolean> {
   const updated = await opcosApi.update(id, { status: 'inactive' })
   return updated != null
 }
 
-/** Activate: set status to active. */
 export async function activateCountry(id: number): Promise<boolean> {
   const updated = await opcosApi.update(id, { status: 'active' })
   return updated != null

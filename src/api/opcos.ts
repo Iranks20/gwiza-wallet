@@ -1,11 +1,5 @@
-/**
- * Countries (OPCOs) API – /opcos/
- * List, get, create, update. No DELETE in API.
- */
-
 import { apiClient, ApiError } from './client'
 
-/** Domain shape used by the app (no circular dep on services). */
 export type Country = {
   id: number
   name: string
@@ -35,7 +29,7 @@ function dtoToCountry(d: OpcoDto): Country {
     name: d.country_name,
     alpha2: d.alpha2_code,
     alpha3: d.alpha3_code,
-    numeric: '', // API does not expose numeric; keep for UI compatibility
+    numeric: '',
     currency: d.currency,
     status: d.country_is_active ? 'active' : 'inactive',
     dial: d.calling_code,
@@ -48,7 +42,6 @@ function isUriLike(s: string): boolean {
   return t.length > 0 && (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('data:'))
 }
 
-/** Build create body with only keys allowed by API (additionalProperties: false). Omit flag when empty to avoid backend 174. */
 function countryToCreateDto(data: Omit<Country, 'id'>): Record<string, unknown> {
   const alpha2 = String(data.alpha2 ?? '').trim().toUpperCase().slice(0, 2)
   const alpha3 = String(data.alpha3 ?? '').trim().toUpperCase().slice(0, 3)

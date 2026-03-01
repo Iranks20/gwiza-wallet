@@ -5,15 +5,20 @@ import { Plus, Edit2, Trash2, X, Search, ArrowUp, ArrowDown, ArrowLeftRight } fr
 import type { OperationType } from '@/services/operationTypesService'
 import { listOperationTypes, createOperationType, updateOperationType, removeOperationType } from '@/services/operationTypesService'
 
+const DIRECTION_OPTIONS: { value: string; label: string }[] = [
+  { value: 'on_us', label: 'On us' },
+  { value: 'off_us', label: 'Off us' },
+]
+
 const directionIcon = (d: string) => {
-  if (d === 'credit') return <ArrowDown size={13} style={{ color: '#4CAF50' }} />
-  if (d === 'debit') return <ArrowUp size={13} style={{ color: '#F44336' }} />
+  if (d === 'on_us') return <ArrowDown size={13} style={{ color: '#4CAF50' }} />
+  if (d === 'off_us') return <ArrowUp size={13} style={{ color: '#F44336' }} />
   return <ArrowLeftRight size={13} style={{ color: '#2196F3' }} />
 }
 
 const directionColor = (d: string) => {
-  if (d === 'credit') return { bg: '#F0FDF4', text: '#166534' }
-  if (d === 'debit') return { bg: '#FEF2F2', text: '#991B1B' }
+  if (d === 'on_us') return { bg: '#F0FDF4', text: '#166534' }
+  if (d === 'off_us') return { bg: '#FEF2F2', text: '#991B1B' }
   return { bg: '#EFF6FF', text: '#1E40AF' }
 }
 
@@ -29,7 +34,7 @@ function OpTypeDrawer({
   isEdit: boolean
 }) {
   const [form, setForm] = useState<OperationType>(
-    item || { id: 0, code: '', name: '', direction: 'both', tag: '', description: '', status: 'active' }
+    item || { id: 0, code: '', name: '', direction: 'on_us', tag: '', description: '', status: 'active' }
   )
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -46,7 +51,8 @@ function OpTypeDrawer({
           </div>
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: '#04304B' }}>Tag</label>
-            <input value={form.tag} onChange={e => setForm({ ...form, tag: e.target.value })} placeholder="e.g. transfer, deposit, payment" className="w-full px-3 py-2.5 border rounded-xl outline-none text-sm" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+            <input value={form.tag} onChange={e => setForm({ ...form, tag: e.target.value })} placeholder="e.g. transfer, deposit_payment (letters, numbers, _ - only)" className="w-full px-3 py-2.5 border rounded-xl outline-none text-sm" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+            <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>No spaces; use underscore or hyphen</p>
           </div>
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: '#04304B' }}>Description</label>
@@ -54,9 +60,9 @@ function OpTypeDrawer({
           </div>
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: '#04304B' }}>Direction</label>
-            <div className="grid grid-cols-3 gap-2">
-              {['credit', 'debit', 'both'].map(d => (
-                <button key={d} onClick={() => setForm({ ...form, direction: d })} className="py-2.5 rounded-xl border font-medium text-sm capitalize cursor-pointer transition-all" style={{ borderColor: form.direction === d ? '#37BBA2' : '#E5E7EB', background: form.direction === d ? '#E8F8F5' : 'white', color: form.direction === d ? '#37BBA2' : '#6B7280', fontSize: 13 }}>{d}</button>
+            <div className="grid grid-cols-2 gap-2">
+              {DIRECTION_OPTIONS.map(({ value, label }) => (
+                <button key={value} type="button" onClick={() => setForm({ ...form, direction: value })} className="py-2.5 rounded-xl border font-medium text-sm cursor-pointer transition-all" style={{ borderColor: form.direction === value ? '#37BBA2' : '#E5E7EB', background: form.direction === value ? '#E8F8F5' : 'white', color: form.direction === value ? '#37BBA2' : '#6B7280', fontSize: 13 }}>{label}</button>
               ))}
             </div>
           </div>
@@ -160,9 +166,8 @@ export default function AdminOperationTypes() {
         </div>
         <select value={dirFilter} onChange={e => setDirFilter(e.target.value)} className="px-3 py-2.5 border rounded-xl text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }}>
           <option value="all">All Directions</option>
-          <option value="credit">Credit</option>
-          <option value="debit">Debit</option>
-          <option value="both">Both</option>
+          <option value="on_us">On us</option>
+          <option value="off_us">Off us</option>
         </select>
         <select value={tagFilter} onChange={e => setTagFilter(e.target.value)} className="px-3 py-2.5 border rounded-xl text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }}>
           <option value="all">All Tags</option>
@@ -182,7 +187,7 @@ export default function AdminOperationTypes() {
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
-              {['Code', 'Name', 'Direction', 'Tag', 'Description', 'Status', 'Actions'].map(h => (
+              {['Name', 'Description', 'Direction', 'Tag', 'Status', 'Date Created', 'Actions'].map(h => (
                 <th key={h} className="text-left px-5 py-3" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{h}</th>
               ))}
             </tr>
@@ -193,18 +198,19 @@ export default function AdminOperationTypes() {
             ) : (
               filtered.map(o => {
                 const dc = directionColor(o.direction)
+                const dateStr = o.date_created ? new Date(o.date_created).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'
                 return (
                   <tr key={String(o.id)} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
-                    <td className="px-5 py-3"><span className="font-mono text-xs font-bold px-2 py-1 rounded-lg" style={{ background: '#F0F9FF', color: '#0369A1' }}>{o.code}</span></td>
-                    <td className="px-5 py-3"><span style={{ color: '#04304B', fontSize: 13 }}>{o.name}</span></td>
+                    <td className="px-5 py-3"><span className="font-mono text-xs font-bold px-2 py-1 rounded-lg" style={{ background: '#F0F9FF', color: '#0369A1' }}>{o.name}</span></td>
+                    <td className="px-5 py-3"><span style={{ color: '#6B7280', fontSize: 12 }} title={o.description}>{o.description || '—'}</span></td>
                     <td className="px-5 py-3">
                       <span className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg w-fit" style={{ background: dc.bg, color: dc.text }}>
-                        {directionIcon(o.direction)} {o.direction}
+                        {directionIcon(o.direction)} {o.direction.replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-5 py-3"><span className="text-xs px-2 py-1 rounded-lg" style={{ background: '#F3F4F6', color: '#6B7280' }}>{o.tag}</span></td>
-                    <td className="px-5 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{o.description}</span></td>
                     <td className="px-5 py-3"><Components.StatusBadge status={o.status} size="sm" /></td>
+                    <td className="px-5 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{dateStr}</span></td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <button onClick={() => setDrawer({ open: true, item: o })} className="p-1.5 hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>

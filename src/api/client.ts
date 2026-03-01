@@ -1,8 +1,3 @@
-/**
- * API client for Wallet+ backend.
- * Base URL and auth (when added) are centralized here.
- */
-
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://walletplus.qa.gwiza.co'
 
 export type ApiResponse<T = unknown> = {
@@ -56,7 +51,6 @@ async function parseResponse<T>(res: Response): Promise<ApiResponse<T>> {
   return body as ApiResponse<T>
 }
 
-/** Serialize a query param so backends that expect "integer" get a plain integer string (no float/scientific). */
 function serializeQueryValue(v: string | number): string {
   if (typeof v === 'number') {
     const n = Number(v)
@@ -83,7 +77,6 @@ export const apiClient = {
     const res = await fetch(buildUrl(path, params), {
       method: 'GET',
       headers: { Accept: 'application/json' },
-      // credentials: 'include' when auth (cookies) is added
     })
     return parseResponse<T>(res)
   },

@@ -1,7 +1,3 @@
-/**
- * Currencies service – backed by Wallet+ /currencies/ API.
- */
-
 import { currenciesApi } from '@/api/currencies'
 import type { Currency } from '@/api/currencies'
 
