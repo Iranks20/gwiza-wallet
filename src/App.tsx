@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router'
+import { Routes, Route, Navigate, Outlet } from 'react-router'
 import UserLayout from './components/UserLayout'
 import AdminLayout from './components/AdminLayout'
 import AdminLogin from './screens/AdminLogin'
@@ -73,14 +73,16 @@ export default function App() {
         <Route path="settings/countries/:countryId/configure" element={<CountryConfigure />}>
           <Route index element={<Navigate to="kyc-tiers" replace />} />
           <Route path="kyc-tiers" element={<ConfigureKYCTiers />} />
-          <Route path="profile-types" element={<ConfigureProfileTypes />} />
-          <Route path="profile-type-groups" element={<ConfigureProfileTypeGroups />} />
-          <Route path="profile-type-groups/:groupId" element={<ProfileTypeGroupsLayout />}>
-            <Route index element={<Navigate to="permissions" replace />} />
-            <Route path="permissions" element={<ConfigureGroupPermissions />} />
-            <Route path="thresholds" element={<ConfigureThresholds />} />
-            <Route path="transaction-rules" element={<ConfigureTransactionRules />} />
-            <Route path="transaction-rules/:ruleId/transaction-fees" element={<ConfigureTransactionFees />} />
+          <Route path="profile-types" element={<Outlet />}>
+            <Route index element={<ConfigureProfileTypes />} />
+            <Route path="profile-type-groups" element={<ConfigureProfileTypeGroups />} />
+            <Route path="profile-type-groups/:groupId" element={<ProfileTypeGroupsLayout />}>
+              <Route index element={<Navigate to="permissions" replace />} />
+              <Route path="permissions" element={<ConfigureGroupPermissions />} />
+              <Route path="thresholds" element={<ConfigureThresholds />} />
+              <Route path="transaction-rules" element={<ConfigureTransactionRules />} />
+              <Route path="transaction-rules/:ruleId/transaction-fees" element={<ConfigureTransactionFees />} />
+            </Route>
           </Route>
           <Route path="transaction-channels" element={<ConfigureTransactionChannels />} />
           <Route path="system-accounts" element={<ConfigureSystemAccounts />} />

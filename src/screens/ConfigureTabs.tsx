@@ -54,19 +54,22 @@ export function ConfigureGroupPermissions() {
 
 export function ConfigureThresholds() {
   const country = useCountryFromParams()
-  return <AdminThresholds embedded country={country} />
+  const { groupId } = useParams<{ groupId?: string }>()
+  const groupIdNum = groupId ? parseInt(groupId, 10) : undefined
+  return <AdminThresholds embedded country={country} groupId={groupIdNum} />
 }
 
 export function ConfigureTransactionRules() {
   const { countryId, groupId } = useParams<{ countryId: string; groupId: string }>()
   const country = countryId ? (countryMap[countryId] ?? countryId) : ''
   const basePath = countryId && groupId
-    ? `/admin/settings/countries/${countryId}/configure/profile-type-groups/${groupId}`
+    ? `/admin/settings/countries/${countryId}/configure/profile-types/profile-type-groups/${groupId}`
     : ''
   return <AdminTransactionRules embedded country={country} configureBasePath={basePath} />
 }
 
 export function ConfigureTransactionFees() {
   const country = useCountryFromParams()
-  return <AdminTransactionFees embedded country={country} />
+  const { ruleId } = useParams<{ ruleId?: string }>()
+  return <AdminTransactionFees embedded country={country} ruleId={ruleId ? parseInt(ruleId, 10) : undefined} />
 }

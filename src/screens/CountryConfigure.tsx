@@ -3,10 +3,10 @@ import React from 'react'
 import { Link, Outlet, useParams, useLocation } from 'react-router'
 import Components from '../components'
 
+/** Top tabs only: KYC Tiers | Profile Types | Transaction Channels | System Accounts. Profile Type Groups is nested under Profile Types. */
 const configureTabs = [
   { key: 'kyc-tiers', label: 'KYC Tiers', path: 'kyc-tiers' },
   { key: 'profile-types', label: 'Profile Types', path: 'profile-types' },
-  { key: 'profile-type-groups', label: 'Profile Type Groups', path: 'profile-type-groups' },
   { key: 'transaction-channels', label: 'Transaction Channels', path: 'transaction-channels' },
   { key: 'system-accounts', label: 'System Accounts', path: 'system-accounts' },
 ] as const
@@ -23,36 +23,20 @@ export default function CountryConfigure() {
   const location = useLocation()
   const base = `/admin/settings/countries/${countryId}/configure`
   const countryName = countryId ? (countryMap[countryId] ?? countryId) : '—'
-  const countryCode = (countryId ?? 'XX').toUpperCase()
   const path = location.pathname
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
       <Components.AdminPageHeader
-        title={`Country · ${countryCode}`}
-        subtitle={`${countryName} — Configure limits, rules, fees and structures`}
+        title={countryName}
+        subtitle="Configure limits, rules, fees and structures"
+        titleTrailing={<Components.StatusBadge status="active" size="sm" />}
       />
-
-      {/* Country header summary: name / code / status */}
-      <div className="flex flex-wrap items-center gap-4 mb-4 p-4 rounded-xl border" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
-        <div>
-          <p className="text-xs mb-0.5" style={{ color: '#6B7280' }}>Name</p>
-          <p className="font-semibold" style={{ color: '#04304B', fontSize: 15 }}>{countryName}</p>
-        </div>
-        <div>
-          <p className="text-xs mb-0.5" style={{ color: '#6B7280' }}>Code</p>
-          <p className="font-mono font-medium" style={{ color: '#37BBA2', fontSize: 14 }}>{countryCode}</p>
-        </div>
-        <div>
-          <p className="text-xs mb-0.5" style={{ color: '#6B7280' }}>Status</p>
-          <Components.StatusBadge status="active" size="sm" />
-        </div>
-      </div>
 
       <div className="mb-4 flex flex-wrap gap-2 border-b" style={{ borderColor: '#E5E7EB' }}>
         {configureTabs.map(t => {
           const to = `${base}/${t.path}`
-          const active = path === to || (t.path !== 'profile-type-groups' && path.startsWith(to))
+          const active = path === to || (t.path === 'profile-types' && path.startsWith(to + '/'))
           return (
             <Link
               key={t.key}

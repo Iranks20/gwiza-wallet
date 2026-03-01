@@ -4,6 +4,8 @@ import React from 'react'
 interface AdminPageHeaderProps {
   title: string
   subtitle?: string
+  /** Rendered to the right of the title on the same line (e.g. status badge) */
+  titleTrailing?: React.ReactNode
   action?: {
     label: string
     onClick: () => void
@@ -16,13 +18,16 @@ interface AdminPageHeaderProps {
   }
 }
 
-export default function AdminPageHeader({ title, subtitle, action, secondaryAction }: AdminPageHeaderProps) {
+export default function AdminPageHeader({ title, subtitle, titleTrailing, action, secondaryAction }: AdminPageHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-6">
       <div>
-        <h1 className="font-bold" style={{ color: '#04304B', fontSize: 24, fontFamily: "'Poppins', sans-serif" }}>
-          {title}
-        </h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="font-bold" style={{ color: '#04304B', fontSize: 24, fontFamily: "'Poppins', sans-serif" }}>
+            {title}
+          </h1>
+          {titleTrailing}
+        </div>
         {subtitle && (
           <p className="mt-1" style={{ color: '#6B7280', fontSize: 14, fontFamily: "'Poppins', sans-serif" }}>
             {subtitle}

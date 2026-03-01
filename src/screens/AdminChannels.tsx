@@ -5,12 +5,16 @@ import { Plus, Edit2, Trash2, X, Search, Smartphone, Globe, CreditCard, Building
 
 const channels = [
   { id: 'CH-001', code: 'MOBILE_MONEY', name: 'Mobile Money', type: 'mobile', country: 'Kenya', currency: 'KES', provider: 'M-Pesa', status: 'active' },
-  { id: 'CH-002', code: 'BANK_TRANSFER', name: 'Bank Transfer', type: 'bank', country: 'Nigeria', currency: 'NGN', provider: 'GTBank', status: 'active' },
-  { id: 'CH-003', code: 'CARD_PAYMENT', name: 'Card Payment', type: 'card', country: 'Ghana', currency: 'GHS', provider: 'Visa/Mastercard', status: 'active' },
-  { id: 'CH-004', code: 'USSD', name: 'USSD', type: 'ussd', country: 'Nigeria', currency: 'NGN', provider: 'MTN', status: 'active' },
-  { id: 'CH-005', code: 'INTERNET_BANKING', name: 'Internet Banking', type: 'bank', country: 'South Africa', currency: 'ZAR', provider: 'Nedbank', status: 'inactive' },
-  { id: 'CH-006', code: 'QR_CODE', name: 'QR Code', type: 'mobile', country: 'Rwanda', currency: 'RWF', provider: 'MTN', status: 'active' },
-  { id: 'CH-007', code: 'WALLET_API', name: 'Wallet API', type: 'api', country: 'UK', currency: 'GBP', provider: 'Internal', status: 'active' },
+  { id: 'CH-002', code: 'USSD', name: 'USSD', type: 'ussd', country: 'Kenya', currency: 'KES', provider: 'Safaricom', status: 'active' },
+  { id: 'CH-003', code: 'BANK_TRANSFER', name: 'Bank Transfer', type: 'bank', country: 'Nigeria', currency: 'NGN', provider: 'GTBank', status: 'active' },
+  { id: 'CH-004', code: 'MOBILE_MONEY', name: 'MTN MoMo', type: 'mobile', country: 'Nigeria', currency: 'NGN', provider: 'MTN', status: 'active' },
+  { id: 'CH-005', code: 'USSD', name: 'USSD', type: 'ussd', country: 'Nigeria', currency: 'NGN', provider: 'MTN', status: 'active' },
+  { id: 'CH-006', code: 'CARD_PAYMENT', name: 'Card Payment', type: 'card', country: 'Ghana', currency: 'GHS', provider: 'Visa/Mastercard', status: 'active' },
+  { id: 'CH-007', code: 'MOBILE_MONEY', name: 'MTN Mobile Money', type: 'mobile', country: 'Ghana', currency: 'GHS', provider: 'MTN', status: 'active' },
+  { id: 'CH-008', code: 'INTERNET_BANKING', name: 'Internet Banking', type: 'bank', country: 'South Africa', currency: 'ZAR', provider: 'Nedbank', status: 'inactive' },
+  { id: 'CH-009', code: 'QR_CODE', name: 'QR Code', type: 'mobile', country: 'Rwanda', currency: 'RWF', provider: 'MTN', status: 'active' },
+  { id: 'CH-010', code: 'WALLET_API', name: 'Wallet API', type: 'api', country: 'United Kingdom', currency: 'GBP', provider: 'Internal', status: 'active' },
+  { id: 'CH-011', code: 'CARD_PAYMENT', name: 'Card Payment', type: 'card', country: 'United Kingdom', currency: 'GBP', provider: 'Visa', status: 'active' },
 ]
 
 const typeIcon = (t: string) => {
@@ -93,6 +97,7 @@ export default function AdminChannels({ country, embedded }: { country?: string;
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [drawer, setDrawer] = useState<{ open: boolean; item?: Channel }>({ open: false })
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const countries = [...new Set(channels.map(c => c.country))]
   const filtered = data.filter(c => {
@@ -115,6 +120,14 @@ export default function AdminChannels({ country, embedded }: { country?: string;
           subtitle="Configure payment and transaction channels"
           action={{ label: 'Add Channel', onClick: () => setDrawer({ open: true }), icon: <Plus size={15} /> }}
         />
+      )}
+      {embedded && (
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>Transaction Channels</h2>
+          <button onClick={() => setDrawer({ open: true })} className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white" style={{ background: '#37BBA2', fontSize: 14 }}>
+            <Plus size={15} /> Add Channel
+          </button>
+        </div>
       )}
 
         <div className="flex flex-wrap items-center gap-3 mb-5">
@@ -164,7 +177,7 @@ export default function AdminChannels({ country, embedded }: { country?: string;
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <button onClick={() => setDrawer({ open: true, item: c })} className="p-1.5 hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
-                        <button className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer" style={{ color: '#F44336' }}><Trash2 size={14} /></button>
+                        <button onClick={() => setDeleteId(c.id)} className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer" style={{ color: '#F44336' }}><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
@@ -179,11 +192,22 @@ export default function AdminChannels({ country, embedded }: { country?: string;
           item={drawer.item}
           onClose={() => setDrawer({ open: false })}
           onSave={item => {
-            setData(prev => (drawer.item ? prev.map(x => (x.id === drawer.item?.id ? item : x)) : [...prev, item]))
+            const nextId = drawer.item ? undefined : 'CH-' + String(100 + data.length + 1)
+            setData(prev => (drawer.item ? prev.map(x => (x.id === drawer.item?.id ? { ...item, id: item.id } : x)) : [...prev, { ...item, id: nextId || item.id }]))
             setDrawer({ open: false })
           }}
         />
       )}
+      <Components.ConfirmModal
+        open={deleteId != null}
+        title="Delete Channel?"
+        message={<>Are you sure you want to delete this channel? This action cannot be undone.</>}
+        onConfirm={() => {
+          if (deleteId != null) setData(prev => prev.filter(c => c.id !== deleteId))
+          setDeleteId(null)
+        }}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   )
 

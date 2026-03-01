@@ -1,28 +1,37 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Components from '../components'
 import { Link } from '@/lib'
-import { Plus, Search, Edit2, Trash2, X, ChevronDown, Settings2 } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, X, Settings2 } from 'lucide-react'
+import type { Country } from '@/services/countriesService'
+import { listCountries, createCountry, updateCountry, removeCountry } from '@/services/countriesService'
 
-const countries = [
-  { id: 1, name: 'United States', alpha2: 'US', alpha3: 'USA', numeric: '840', currency: 'USD', status: 'active', dial: '+1' },
-  { id: 2, name: 'United Kingdom', alpha2: 'GB', alpha3: 'GBR', numeric: '826', currency: 'GBP', status: 'active', dial: '+44' },
-  { id: 3, name: 'Kenya', alpha2: 'KE', alpha3: 'KEN', numeric: '404', currency: 'KES', status: 'active', dial: '+254' },
-  { id: 4, name: 'Nigeria', alpha2: 'NG', alpha3: 'NGA', numeric: '566', currency: 'NGN', status: 'active', dial: '+234' },
-  { id: 5, name: 'Ghana', alpha2: 'GH', alpha3: 'GHA', numeric: '288', currency: 'GHS', status: 'inactive', dial: '+233' },
-  { id: 6, name: 'South Africa', alpha2: 'ZA', alpha3: 'ZAF', numeric: '710', currency: 'ZAR', status: 'active', dial: '+27' },
-  { id: 7, name: 'Rwanda', alpha2: 'RW', alpha3: 'RWA', numeric: '646', currency: 'RWF', status: 'active', dial: '+250' },
-  { id: 8, name: 'Tanzania', alpha2: 'TZ', alpha3: 'TZA', numeric: '834', currency: 'TZS', status: 'inactive', dial: '+255' },
-]
+const emptyForm: Omit<Country, 'id'> = { name: '', alpha2: '', alpha3: '', numeric: '', currency: '', status: 'active', dial: '' }
 
 interface DrawerProps {
   open: boolean
   onClose: () => void
-  country?: typeof countries[0] | null
+  country?: Country | null
+  onSave: (data: Country | Omit<Country, 'id'>) => void
 }
 
-function CountryDrawer({ open, onClose, country }: DrawerProps) {
+function CountryDrawer({ open, onClose, country, onSave }: DrawerProps) {
+  const [form, setForm] = useState<Omit<Country, 'id'> & { id?: number }>({ ...emptyForm })
+  useEffect(() => {
+    if (open) setForm(country ? { ...country } : { ...emptyForm })
+  }, [open, country])
+
   if (!open) return null
+  const handleSave = () => {
+    if (country?.id) {
+      const { id, ...rest } = form as Country
+      onSave({ ...country, ...rest })
+    } else {
+      const { id, ...rest } = form
+      onSave({ ...rest, status: form.status || 'active' })
+    }
+    onClose()
+  }
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
@@ -35,18 +44,19 @@ function CountryDrawer({ open, onClose, country }: DrawerProps) {
         </div>
         <div className="flex-1 overflow-auto p-6 space-y-4">
           {[
-            { label: 'Country Name', placeholder: 'e.g. United States', value: country?.name || '' },
-            { label: 'Alpha-2 Code', placeholder: 'e.g. US', value: country?.alpha2 || '' },
-            { label: 'Alpha-3 Code', placeholder: 'e.g. USA', value: country?.alpha3 || '' },
-            { label: 'Numeric Code', placeholder: 'e.g. 840', value: country?.numeric || '' },
-            { label: 'Default Currency', placeholder: 'e.g. USD', value: country?.currency || '' },
-            { label: 'Dial Code', placeholder: 'e.g. +1', value: country?.dial || '' },
-          ].map((field, i) => (
-            <div key={i}>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>{field.label}</label>
+            { key: 'name', label: 'Country Name', placeholder: 'e.g. United States' },
+            { key: 'alpha2', label: 'Alpha-2 Code', placeholder: 'e.g. US' },
+            { key: 'alpha3', label: 'Alpha-3 Code', placeholder: 'e.g. USA' },
+            { key: 'numeric', label: 'Numeric Code', placeholder: 'e.g. 840' },
+            { key: 'currency', label: 'Default Currency', placeholder: 'e.g. USD' },
+            { key: 'dial', label: 'Dial Code', placeholder: 'e.g. +1' },
+          ].map(({ key, label, placeholder }) => (
+            <div key={key}>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>{label}</label>
               <input
-                defaultValue={field.value}
-                placeholder={field.placeholder}
+                value={form[key as keyof typeof form] ?? ''}
+                onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                placeholder={placeholder}
                 className="w-full px-3 py-2.5 border rounded-lg outline-none transition-all text-sm"
                 style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
                 onFocus={e => e.target.style.borderColor = '#37BBA2'}
@@ -56,7 +66,12 @@ function CountryDrawer({ open, onClose, country }: DrawerProps) {
           ))}
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Status</label>
-            <select className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer" style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}>
+            <select
+              value={form.status}
+              onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
+              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer"
+              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
+            >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
@@ -66,7 +81,7 @@ function CountryDrawer({ open, onClose, country }: DrawerProps) {
           <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border font-medium cursor-pointer hover:bg-gray-50 transition-colors" style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 14 }}>
             Cancel
           </button>
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-lg font-medium text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: '#37BBA2', fontSize: 14 }}>
+          <button onClick={handleSave} className="flex-1 py-2.5 rounded-lg font-medium text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: '#37BBA2', fontSize: 14 }}>
             {country ? 'Save Changes' : 'Add Country'}
           </button>
         </div>
@@ -76,10 +91,31 @@ function CountryDrawer({ open, onClose, country }: DrawerProps) {
 }
 
 export default function AdminCountries() {
+  const [countries, setCountries] = useState<Country[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [editCountry, setEditCountry] = useState<typeof countries[0] | null>(null)
+  const [editCountry, setEditCountry] = useState<Country | null>(null)
+  const [deleteId, setDeleteId] = useState<number | null>(null)
+
+  const loadCountries = () => listCountries().then(setCountries)
+  useEffect(() => { loadCountries() }, [])
+
+  const handleSave = async (data: Country | Omit<Country, 'id'>) => {
+    if ('id' in data && data.id) {
+      await updateCountry(data.id, data)
+    } else {
+      await createCountry(data as Omit<Country, 'id'>)
+    }
+    loadCountries()
+  }
+  const handleDelete = async () => {
+    if (deleteId != null) {
+      await removeCountry(deleteId)
+      loadCountries()
+      setDeleteId(null)
+    }
+  }
 
   const filtered = countries.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.alpha2.toLowerCase().includes(search.toLowerCase())
@@ -165,6 +201,7 @@ export default function AdminCountries() {
                         <Edit2 size={14} />
                       </button>
                       <button
+                        onClick={() => setDeleteId(c.id)}
                         className="p-1.5 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
                         style={{ color: '#F44336' }}
                       >
@@ -178,7 +215,14 @@ export default function AdminCountries() {
           </table>
         </div>
 
-        <CountryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} country={editCountry} />
+        <CountryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} country={editCountry} onSave={handleSave} />
+        <Components.ConfirmModal
+          open={deleteId != null}
+          title="Delete Country?"
+          message={<>Are you sure you want to delete this country? This action cannot be undone.</>}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteId(null)}
+        />
       </div>
   )
 }

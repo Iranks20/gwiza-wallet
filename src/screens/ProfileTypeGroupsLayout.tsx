@@ -11,7 +11,7 @@ const subTabs = [
 export default function ProfileTypeGroupsLayout() {
   const { countryId, groupId } = useParams<{ countryId: string; groupId: string }>()
   const location = useLocation()
-  const base = `/admin/settings/countries/${countryId}/configure/profile-type-groups/${groupId}`
+  const base = `/admin/settings/countries/${countryId}/configure/profile-types/profile-type-groups/${groupId}`
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>

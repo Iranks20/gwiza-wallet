@@ -3,4 +3,5 @@ import AdminPageHeader from './AdminPageHeader'
 import StatusBadge from './StatusBadge'
 import AdminLayout from './AdminLayout'
 
-export default { AdminPageHeader, StatusBadge, AdminLayout }
+import ConfirmModal from './ConfirmModal'
+export default { AdminPageHeader, StatusBadge, AdminLayout, ConfirmModal }
