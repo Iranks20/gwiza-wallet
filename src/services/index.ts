@@ -1,4 +1,6 @@
 export * from './countriesService'
+export * from './currenciesService'
+export * from './operationTypesService'
 export * from './kycTiersService'
 export * from './profileTypesService'
 export * from './profileTypeGroupsService'

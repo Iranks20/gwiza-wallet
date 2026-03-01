@@ -2,36 +2,66 @@
 import React, { useState, useEffect } from 'react'
 import Components from '../components'
 import { Link } from '@/lib'
-import { Plus, Search, Edit2, Trash2, X, Settings2 } from 'lucide-react'
+import { Plus, Search, Edit2, X, Settings2, Power, PowerOff } from 'lucide-react'
 import type { Country } from '@/services/countriesService'
-import { listCountries, createCountry, updateCountry, removeCountry } from '@/services/countriesService'
+import { listCountries, createCountry, updateCountry, deactivateCountry, activateCountry } from '@/services/countriesService'
+import { listCurrencies } from '@/services/currenciesService'
+import type { Currency } from '@/services/currenciesService'
+import { ApiError } from '@/api/client'
+import { validateCountryForm, type FieldErrors } from '@/lib/countryFormValidation'
 
-const emptyForm: Omit<Country, 'id'> = { name: '', alpha2: '', alpha3: '', numeric: '', currency: '', status: 'active', dial: '' }
+const emptyForm: Omit<Country, 'id'> = { name: '', alpha2: '', alpha3: '', numeric: '', currency: '', status: 'active', dial: '', flag: '' }
 
 interface DrawerProps {
   open: boolean
   onClose: () => void
   country?: Country | null
   onSave: (data: Country | Omit<Country, 'id'>) => void
+  saving?: boolean
+  currencies: Currency[]
 }
 
-function CountryDrawer({ open, onClose, country, onSave }: DrawerProps) {
+function CountryDrawer({ open, onClose, country, onSave, saving, currencies }: DrawerProps) {
   const [form, setForm] = useState<Omit<Country, 'id'> & { id?: number }>({ ...emptyForm })
+  const [errors, setErrors] = useState<FieldErrors>({})
   useEffect(() => {
-    if (open) setForm(country ? { ...country } : { ...emptyForm })
+    if (open) {
+      setForm(country ? { ...country } : { ...emptyForm })
+      setErrors({})
+    }
   }, [open, country])
 
   if (!open) return null
+
   const handleSave = () => {
-    if (country?.id) {
-      const { id, ...rest } = form as Country
-      onSave({ ...country, ...rest })
-    } else {
-      const { id, ...rest } = form
-      onSave({ ...rest, status: form.status || 'active' })
+    const payload = country?.id
+      ? { ...country, ...form } as Country
+      : { ...form, id: undefined, status: form.status || 'active' } as Omit<Country, 'id'>
+    const formData = {
+      name: payload.name,
+      alpha2: payload.alpha2,
+      alpha3: payload.alpha3,
+      numeric: payload.numeric,
+      currency: payload.currency,
+      dial: payload.dial,
+      flag: payload.flag ?? '',
+      status: payload.status,
     }
-    onClose()
+    const nextErrors = validateCountryForm(formData, !country?.id)
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) return
+    onSave(payload)
   }
+
+  type FormFieldKey = keyof Omit<Country, 'id'> | 'flag'
+  const textFields: { key: FormFieldKey; label: string; placeholder: string; required?: boolean }[] = [
+    { key: 'name', label: 'Country Name', placeholder: 'e.g. United States', required: true },
+    { key: 'alpha2', label: 'Alpha-2 Code', placeholder: 'e.g. US (exactly 2 letters)', required: true },
+    { key: 'alpha3', label: 'Alpha-3 Code', placeholder: 'e.g. USA (exactly 3 letters)', required: true },
+    { key: 'dial', label: 'Dial Code', placeholder: 'e.g. +1 or +254', required: true },
+    { key: 'flag', label: 'Flag (URL)', placeholder: 'e.g. https://flagcdn.com/w80/us.png (optional)' },
+  ]
+
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
@@ -43,27 +73,55 @@ function CountryDrawer({ open, onClose, country, onSave }: DrawerProps) {
           <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg"><X size={18} /></button>
         </div>
         <div className="flex-1 overflow-auto p-6 space-y-4">
-          {[
-            { key: 'name', label: 'Country Name', placeholder: 'e.g. United States' },
-            { key: 'alpha2', label: 'Alpha-2 Code', placeholder: 'e.g. US' },
-            { key: 'alpha3', label: 'Alpha-3 Code', placeholder: 'e.g. USA' },
-            { key: 'numeric', label: 'Numeric Code', placeholder: 'e.g. 840' },
-            { key: 'currency', label: 'Default Currency', placeholder: 'e.g. USD' },
-            { key: 'dial', label: 'Dial Code', placeholder: 'e.g. +1' },
-          ].map(({ key, label, placeholder }) => (
+          {textFields.map(({ key, label, placeholder }) => (
             <div key={key}>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>{label}</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>
+                {label}
+              </label>
               <input
                 value={form[key as keyof typeof form] ?? ''}
-                onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                onChange={e => { setForm(f => ({ ...f, [key]: e.target.value })); if (key in errors && errors[key as keyof FieldErrors]) setErrors(prev => ({ ...prev, [key]: undefined })) }}
                 placeholder={placeholder}
                 className="w-full px-3 py-2.5 border rounded-lg outline-none transition-all text-sm"
-                style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
-                onFocus={e => e.target.style.borderColor = '#37BBA2'}
-                onBlur={e => e.target.style.borderColor = '#E5E7EB'}
+                style={{
+                  borderColor: (key in errors && errors[key as keyof FieldErrors]) ? '#B91C1C' : '#E5E7EB',
+                  color: '#04304B',
+                  fontSize: 13,
+                }}
+                onFocus={e => { e.target.style.borderColor = (key in errors && errors[key as keyof FieldErrors]) ? '#B91C1C' : '#37BBA2' }}
+                onBlur={e => { e.target.style.borderColor = (key in errors && errors[key as keyof FieldErrors]) ? '#B91C1C' : '#E5E7EB' }}
               />
+              {key in errors && errors[key as keyof FieldErrors] && (
+                <p className="mt-1 text-xs" style={{ color: '#B91C1C' }}>{errors[key as keyof FieldErrors]}</p>
+              )}
             </div>
           ))}
+          <div>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>
+              Default Currency <span className="text-gray-500 font-normal">(from system)</span>
+            </label>
+            <select
+              value={form.currency}
+              onChange={e => { setForm(f => ({ ...f, currency: e.target.value })); if (errors.currency) setErrors(prev => ({ ...prev, currency: undefined })) }}
+              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer"
+              style={{
+                borderColor: errors.currency ? '#B91C1C' : '#E5E7EB',
+                color: '#04304B',
+                fontSize: 13,
+              }}
+            >
+              <option value="">Select currency</option>
+              {currencies.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.code} – {c.name}
+                </option>
+              ))}
+            </select>
+            {errors.currency && <p className="mt-1 text-xs" style={{ color: '#B91C1C' }}>{errors.currency}</p>}
+            {currencies.length === 0 && (
+              <p className="mt-1 text-xs" style={{ color: '#6B7280' }}>No currencies in system. Create them under Admin → Currencies first.</p>
+            )}
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Status</label>
             <select
@@ -81,8 +139,8 @@ function CountryDrawer({ open, onClose, country, onSave }: DrawerProps) {
           <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border font-medium cursor-pointer hover:bg-gray-50 transition-colors" style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 14 }}>
             Cancel
           </button>
-          <button onClick={handleSave} className="flex-1 py-2.5 rounded-lg font-medium text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: '#37BBA2', fontSize: 14 }}>
-            {country ? 'Save Changes' : 'Add Country'}
+          <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-lg font-medium text-white cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60" style={{ background: '#37BBA2', fontSize: 14 }}>
+            {saving ? 'Saving…' : (country ? 'Save Changes' : 'Add Country')}
           </button>
         </div>
       </div>
@@ -92,22 +150,39 @@ function CountryDrawer({ open, onClose, country, onSave }: DrawerProps) {
 
 export default function AdminCountries() {
   const [countries, setCountries] = useState<Country[]>([])
+  const [currencies, setCurrencies] = useState<Currency[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editCountry, setEditCountry] = useState<Country | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
-  const loadCountries = () => listCountries().then(setCountries)
-  useEffect(() => { loadCountries() }, [])
+  const loadCountries = () => listCountries().then(setCountries).catch(() => {})
+  const loadCurrencies = () => listCurrencies().then(setCurrencies).catch(() => {})
+  useEffect(() => { loadCountries(); loadCurrencies() }, [])
+  useEffect(() => { if (drawerOpen) loadCurrencies() }, [drawerOpen])
 
   const handleSave = async (data: Country | Omit<Country, 'id'>) => {
-    if ('id' in data && data.id) {
-      await updateCountry(data.id, data)
-    } else {
-      await createCountry(data as Omit<Country, 'id'>)
+    setError(null)
+    setSaving(true)
+    try {
+      if ('id' in data && data.id) {
+        await updateCountry(data.id, data)
+      } else {
+        await createCountry(data as Omit<Country, 'id'>)
+      }
+      loadCountries()
+      setDrawerOpen(false)
+    } catch (e) {
+      const msg = e instanceof ApiError && e.respCode === 174
+        ? 'Server rejected the request (code 174). The country may already exist, or the backend may not allow creating new countries. Try editing an existing country or contact your backend team.'
+        : (e instanceof Error ? e.message : 'Save failed')
+      setError(msg)
+    } finally {
+      setSaving(false)
     }
-    loadCountries()
   }
   const handleDelete = async () => {
     if (deleteId != null) {
@@ -128,8 +203,15 @@ export default function AdminCountries() {
         <Components.AdminPageHeader
           title="Countries"
           subtitle="Manage reference country data for the platform"
-          action={{ label: 'Add Country', onClick: () => { setEditCountry(null); setDrawerOpen(true) }, icon: <Plus size={16} /> }}
+          action={{ label: 'Add Country', onClick: () => { setEditCountry(null); setError(null); setDrawerOpen(true) }, icon: <Plus size={16} /> }}
         />
+
+        {error && (
+          <div className="mb-4 p-3 rounded-lg flex items-center justify-between" style={{ background: '#FEF2F2', color: '#B91C1C', fontSize: 13 }}>
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="text-sm font-medium">Dismiss</button>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex items-center gap-3 mb-5">
@@ -158,28 +240,31 @@ export default function AdminCountries() {
           <span className="text-sm" style={{ color: '#9CA3AF', fontSize: 13 }}>{filtered.length} results</span>
         </div>
 
-        {/* Table */}
+        {/* Table – columns match API: country_name, flag, alpha2_code, alpha3_code, currency, calling_code, country_is_active */}
         <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           <table className="w-full">
             <thead>
               <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
-                {['Country Name', 'Alpha-2', 'Alpha-3', 'Numeric', 'Currency', 'Dial Code', 'Status', 'Actions'].map(h => (
+                {['Flag', 'Country Name', 'Alpha-2', 'Alpha-3', 'Currency', 'Calling Code', 'Status', 'Actions'].map(h => (
                   <th key={h} className="text-left px-4 py-3" style={{ color: '#6B7280', fontSize: 12, fontWeight: 600 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((c, i) => (
+              {filtered.map((c) => (
                 <tr key={c.id} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="w-7 h-5 rounded text-xs flex items-center justify-center font-bold text-white" style={{ background: '#37BBA2', fontSize: 10 }}>{c.alpha2}</span>
-                      <span style={{ color: '#04304B', fontSize: 13, fontWeight: 500 }}>{c.name}</span>
-                    </div>
+                    {c.flag ? (
+                      <img src={c.flag} alt="" className="w-8 h-5 object-cover rounded border" style={{ borderColor: '#E5E7EB' }} />
+                    ) : (
+                      <span className="text-gray-400 text-xs">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span style={{ color: '#04304B', fontSize: 13, fontWeight: 500 }}>{c.name}</span>
                   </td>
                   <td className="px-4 py-3"><span className="font-mono" style={{ color: '#04304B', fontSize: 13 }}>{c.alpha2}</span></td>
                   <td className="px-4 py-3"><span className="font-mono" style={{ color: '#04304B', fontSize: 13 }}>{c.alpha3}</span></td>
-                  <td className="px-4 py-3"><span className="font-mono" style={{ color: '#6B7280', fontSize: 13 }}>{c.numeric}</span></td>
                   <td className="px-4 py-3"><span style={{ color: '#04304B', fontSize: 13 }}>{c.currency}</span></td>
                   <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 13 }}>{c.dial}</span></td>
                   <td className="px-4 py-3"><Components.StatusBadge status={c.status} size="sm" /></td>
@@ -215,7 +300,7 @@ export default function AdminCountries() {
           </table>
         </div>
 
-        <CountryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} country={editCountry} onSave={handleSave} />
+        <CountryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} country={editCountry} onSave={handleSave} saving={saving} currencies={currencies} />
         <Components.ConfirmModal
           open={deleteId != null}
           title="Delete Country?"

@@ -1,18 +1,9 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Components from '../components'
 import { Plus, Edit2, Trash2, X, Search, ArrowUp, ArrowDown, ArrowLeftRight } from 'lucide-react'
-
-const opTypes = [
-  { id: 'OT-001', code: 'P2P_TRANSFER', name: 'P2P Transfer', direction: 'both', tag: 'transfer', description: 'Peer-to-peer wallet transfer', status: 'active' },
-  { id: 'OT-002', code: 'TOP_UP', name: 'Top Up', direction: 'credit', tag: 'deposit', description: 'Wallet top up / deposit', status: 'active' },
-  { id: 'OT-003', code: 'WITHDRAWAL', name: 'Withdrawal', direction: 'debit', tag: 'withdrawal', description: 'Wallet withdrawal', status: 'active' },
-  { id: 'OT-004', code: 'BILL_PAYMENT', name: 'Bill Payment', direction: 'debit', tag: 'payment', description: 'Utility bill payment', status: 'active' },
-  { id: 'OT-005', code: 'AIRTIME', name: 'Airtime Purchase', direction: 'debit', tag: 'airtime', description: 'Mobile airtime recharge', status: 'active' },
-  { id: 'OT-006', code: 'MERCHANT_PAY', name: 'Merchant Payment', direction: 'debit', tag: 'payment', description: 'Payment to merchant', status: 'active' },
-  { id: 'OT-007', code: 'REVERSAL', name: 'Reversal', direction: 'credit', tag: 'reversal', description: 'Transaction reversal / refund', status: 'inactive' },
-  { id: 'OT-008', code: 'FEE_CHARGE', name: 'Fee Charge', direction: 'debit', tag: 'fee', description: 'Internal fee deduction', status: 'active' },
-]
+import type { OperationType } from '@/services/operationTypesService'
+import { listOperationTypes, createOperationType, updateOperationType, removeOperationType } from '@/services/operationTypesService'
 
 const directionIcon = (d: string) => {
   if (d === 'credit') return <ArrowDown size={13} style={{ color: '#4CAF50' }} />
@@ -26,31 +17,41 @@ const directionColor = (d: string) => {
   return { bg: '#EFF6FF', text: '#1E40AF' }
 }
 
-type OpType = typeof opTypes[0]
-
-function OpTypeDrawer({ item, onClose, onSave }: { item?: OpType; onClose: () => void; onSave: (i: OpType) => void }) {
-  const [form, setForm] = useState<OpType>(item || { id: `OT-00${opTypes.length + 1}`, code: '', name: '', direction: 'both', tag: '', description: '', status: 'active' })
+function OpTypeDrawer({
+  item,
+  onClose,
+  onSave,
+  isEdit,
+}: {
+  item?: OperationType
+  onClose: () => void
+  onSave: (i: Pick<OperationType, 'name' | 'direction' | 'tag' | 'description' | 'status'>) => void
+  isEdit: boolean
+}) {
+  const [form, setForm] = useState<OperationType>(
+    item || { id: 0, code: '', name: '', direction: 'both', tag: '', description: '', status: 'active' }
+  )
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
       <div className="w-full max-w-md bg-white h-full flex flex-col shadow-2xl" style={{ fontFamily: "'Poppins', sans-serif" }}>
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
-          <h2 className="font-bold" style={{ color: '#04304B', fontSize: 18 }}>{item ? 'Edit Operation Type' : 'Add Operation Type'}</h2>
+          <h2 className="font-bold" style={{ color: '#04304B', fontSize: 18 }}>{isEdit ? 'Edit Operation Type' : 'Add Operation Type'}</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={18} /></button>
         </div>
         <div className="flex-1 overflow-auto p-6 space-y-5">
-          {[
-            { label: 'Operation Code', key: 'code', placeholder: 'e.g. P2P_TRANSFER', hint: 'Unique uppercase code with underscores' },
-            { label: 'Display Name', key: 'name', placeholder: 'e.g. P2P Transfer' },
-            { label: 'Tag', key: 'tag', placeholder: 'e.g. transfer, deposit, payment' },
-            { label: 'Description', key: 'description', placeholder: 'Brief description of this operation' },
-          ].map(f => (
-            <div key={f.key}>
-              <label className="block text-xs font-semibold mb-1.5" style={{ color: '#04304B' }}>{f.label}</label>
-              <input value={(form as any)[f.key]} onChange={e => setForm({ ...form, [f.key]: e.target.value })} placeholder={f.placeholder} className="w-full px-3 py-2.5 border rounded-xl outline-none text-sm" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
-              {f.hint && <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>{f.hint}</p>}
-            </div>
-          ))}
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#04304B' }}>Display Name</label>
+            <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. P2P Transfer" className="w-full px-3 py-2.5 border rounded-xl outline-none text-sm" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#04304B' }}>Tag</label>
+            <input value={form.tag} onChange={e => setForm({ ...form, tag: e.target.value })} placeholder="e.g. transfer, deposit, payment" className="w-full px-3 py-2.5 border rounded-xl outline-none text-sm" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#04304B' }}>Description</label>
+            <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Brief description" className="w-full px-3 py-2.5 border rounded-xl outline-none text-sm" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+          </div>
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: '#04304B' }}>Direction</label>
             <div className="grid grid-cols-3 gap-2">
@@ -69,7 +70,7 @@ function OpTypeDrawer({ item, onClose, onSave }: { item?: OpType; onClose: () =>
         </div>
         <div className="p-6 border-t flex gap-3" style={{ borderColor: '#E5E7EB' }}>
           <button onClick={onClose} className="flex-1 py-2.5 border rounded-xl font-medium cursor-pointer" style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 14 }}>Cancel</button>
-          <button onClick={() => onSave(form)} className="flex-1 py-2.5 rounded-xl font-medium text-white cursor-pointer" style={{ background: '#37BBA2', fontSize: 14 }}>{item ? 'Save Changes' : 'Add Type'}</button>
+          <button onClick={() => onSave({ name: form.name, tag: form.tag, description: form.description, direction: form.direction, status: form.status })} className="flex-1 py-2.5 rounded-xl font-medium text-white cursor-pointer" style={{ background: '#37BBA2', fontSize: 14 }}>{isEdit ? 'Save Changes' : 'Add Type'}</button>
         </div>
       </div>
     </div>
@@ -77,14 +78,26 @@ function OpTypeDrawer({ item, onClose, onSave }: { item?: OpType; onClose: () =>
 }
 
 export default function AdminOperationTypes() {
-  const [data, setData] = useState(opTypes)
+  const [data, setData] = useState<OperationType[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [dirFilter, setDirFilter] = useState('all')
   const [tagFilter, setTagFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [drawer, setDrawer] = useState<{ open: boolean; item?: OpType }>({ open: false })
+  const [drawer, setDrawer] = useState<{ open: boolean; item?: OperationType }>({ open: false })
+  const [deleteId, setDeleteId] = useState<number | null>(null)
 
-  const tags = [...new Set(opTypes.map(o => o.tag))]
+  const load = () => {
+    setLoading(true)
+    setError(null)
+    listOperationTypes({ direction: dirFilter === 'all' ? undefined : dirFilter, tag: tagFilter === 'all' ? undefined : tagFilter, status: statusFilter === 'all' ? undefined : statusFilter })
+      .then(setData)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
+      .finally(() => setLoading(false))
+  }
+  useEffect(() => { load() }, [dirFilter, tagFilter, statusFilter])
+
   const filtered = data.filter(o => {
     const q = search.toLowerCase()
     return (!search || o.code.toLowerCase().includes(q) || o.name.toLowerCase().includes(q)) &&
@@ -93,47 +106,95 @@ export default function AdminOperationTypes() {
       (statusFilter === 'all' || o.status === statusFilter)
   })
 
+  const tags = [...new Set(data.map(o => o.tag).filter(Boolean))]
+
+  const handleSave = async (payload: Pick<OperationType, 'name' | 'direction' | 'tag' | 'description' | 'status'>) => {
+    setError(null)
+    try {
+      if (drawer.item) {
+        const id = typeof drawer.item.id === 'string' ? parseInt(drawer.item.id, 10) : drawer.item.id
+        await updateOperationType(id, payload)
+      } else {
+        await createOperationType(payload)
+      }
+      load()
+      setDrawer({ open: false })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Save failed')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (deleteId == null) return
+    setError(null)
+    try {
+      await removeOperationType(deleteId)
+      setData((prev) => prev.filter((o) => (typeof o.id === 'string' ? parseInt(o.id, 10) : o.id) !== deleteId))
+      setDeleteId(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Delete failed')
+    } finally {
+      setDeleteId(null)
+    }
+  }
+
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
-        <Components.AdminPageHeader
-          title="Transaction Operation Types"
-          subtitle="Define and manage transaction operation types"
-          action={{ label: 'Add Type', onClick: () => setDrawer({ open: true }), icon: <Plus size={15} /> }}
-        />
+      <Components.AdminPageHeader
+        title="Transaction Operation Types"
+        subtitle="Define and manage transaction operation types"
+        action={{ label: 'Add Type', onClick: () => setDrawer({ open: true }), icon: <Plus size={15} /> }}
+      />
 
-        <div className="flex flex-wrap items-center gap-3 mb-5">
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search code or name..." className="pl-9 pr-4 py-2.5 border rounded-xl text-sm outline-none w-56" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
-          </div>
-          {[
-            { label: 'Direction', value: dirFilter, set: setDirFilter, opts: [['all','All Directions'],['credit','Credit'],['debit','Debit'],['both','Both']] },
-            { label: 'Tag', value: tagFilter, set: setTagFilter, opts: [['all','All Tags'], ...tags.map(t => [t, t])] },
-            { label: 'Status', value: statusFilter, set: setStatusFilter, opts: [['all','All Status'],['active','Active'],['inactive','Inactive']] },
-          ].map(f => (
-            <select key={f.label} value={f.value} onChange={e => f.set(e.target.value)} className="px-3 py-2.5 border rounded-xl text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }}>
-              {f.opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-            </select>
-          ))}
+      {error && (
+        <div className="mb-4 px-4 py-3 rounded-xl border flex items-center justify-between" style={{ borderColor: '#FECACA', background: '#FEF2F2', color: '#991B1B' }}>
+          <span className="text-sm">{error}</span>
+          <button onClick={() => setError(null)} className="text-sm font-medium">Dismiss</button>
         </div>
+      )}
 
-        <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div className="px-5 py-3 border-b" style={{ borderColor: '#E5E7EB', background: '#FAFBFC' }}>
-            <span style={{ color: '#6B7280', fontSize: 13 }}>{filtered.length} operation types</span>
-          </div>
-          <table className="w-full">
-            <thead>
-              <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
-                {['Code', 'Name', 'Direction', 'Tag', 'Description', 'Status', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-5 py-3" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(o => {
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search code or name..." className="pl-9 pr-4 py-2.5 border rounded-xl text-sm outline-none w-56" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+        </div>
+        <select value={dirFilter} onChange={e => setDirFilter(e.target.value)} className="px-3 py-2.5 border rounded-xl text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }}>
+          <option value="all">All Directions</option>
+          <option value="credit">Credit</option>
+          <option value="debit">Debit</option>
+          <option value="both">Both</option>
+        </select>
+        <select value={tagFilter} onChange={e => setTagFilter(e.target.value)} className="px-3 py-2.5 border rounded-xl text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }}>
+          <option value="all">All Tags</option>
+          {tags.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2.5 border rounded-xl text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }}>
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+        <div className="px-5 py-3 border-b" style={{ borderColor: '#E5E7EB', background: '#FAFBFC' }}>
+          <span style={{ color: '#6B7280', fontSize: 13 }}>{loading ? 'Loading...' : `${filtered.length} operation types`}</span>
+        </div>
+        <table className="w-full">
+          <thead>
+            <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
+              {['Code', 'Name', 'Direction', 'Tag', 'Description', 'Status', 'Actions'].map(h => (
+                <th key={h} className="text-left px-5 py-3" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={7} className="px-5 py-8 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</td></tr>
+            ) : (
+              filtered.map(o => {
                 const dc = directionColor(o.direction)
                 return (
-                  <tr key={o.id} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
+                  <tr key={String(o.id)} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
                     <td className="px-5 py-3"><span className="font-mono text-xs font-bold px-2 py-1 rounded-lg" style={{ background: '#F0F9FF', color: '#0369A1' }}>{o.code}</span></td>
                     <td className="px-5 py-3"><span style={{ color: '#04304B', fontSize: 13 }}>{o.name}</span></td>
                     <td className="px-5 py-3">
@@ -147,17 +208,26 @@ export default function AdminOperationTypes() {
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <button onClick={() => setDrawer({ open: true, item: o })} className="p-1.5 hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
-                        <button className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer" style={{ color: '#F44336' }}><Trash2 size={14} /></button>
+                        <button onClick={() => setDeleteId(typeof o.id === 'string' ? parseInt(o.id, 10) : o.id)} className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer" style={{ color: '#F44336' }}><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
                 )
-              })}
-            </tbody>
-          </table>
-        </div>
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
 
-        {drawer.open && <OpTypeDrawer item={drawer.item} onClose={() => setDrawer({ open: false })} onSave={item => { setData(prev => drawer.item ? prev.map(x => x.id === drawer.item?.id ? item : x) : [...prev, item]); setDrawer({ open: false }) }} />}
+      {drawer.open && <OpTypeDrawer item={drawer.item} isEdit={!!drawer.item} onClose={() => setDrawer({ open: false })} onSave={handleSave} />}
+
+      <Components.ConfirmModal
+        open={deleteId != null}
+        title="Delete Operation Type?"
+        message="Are you sure you want to delete this operation type? This action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   )
 }

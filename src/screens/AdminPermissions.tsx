@@ -129,32 +129,52 @@ function PermissionDrawer({ open, onClose, permission, onSave }: PermissionDrawe
 
 export default function AdminPermissions() {
   const [permissions, setPermissions] = useState<PermissionCatalogItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [scopeFilter, setScopeFilter] = useState('all')
   const [tagFilter, setTagFilter] = useState('all')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editPermission, setEditPermission] = useState<PermissionCatalogItem | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
 
-  const loadPermissions = () =>
+  const loadPermissions = () => {
+    setLoading(true)
+    setError(null)
     listPermissionsCatalog({
       scope: scopeFilter === 'all' ? undefined : scopeFilter,
       tag: tagFilter === 'all' ? undefined : tagFilter,
       status: undefined,
-    }).then(setPermissions)
+    })
+      .then(setPermissions)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load permissions'))
+      .finally(() => setLoading(false))
+  }
   useEffect(() => { loadPermissions() }, [scopeFilter, tagFilter])
 
   const handleSave = async (data: PermissionCatalogItem | Omit<PermissionCatalogItem, 'id'>) => {
-    if ('id' in data && data.id) {
-      await updatePermissionCatalog(data.id, data)
-    } else {
-      await createPermissionCatalog(data as Omit<PermissionCatalogItem, 'id'>)
+    setError(null)
+    try {
+      if ('id' in data && data.id) {
+        await updatePermissionCatalog(data.id, data)
+      } else {
+        await createPermissionCatalog(data as Omit<PermissionCatalogItem, 'id'>)
+      }
+      loadPermissions()
+      setDrawerOpen(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Save failed')
     }
-    loadPermissions()
   }
   const handleDelete = async () => {
-    if (deleteId != null) {
+    if (deleteId == null) return
+    setError(null)
+    try {
       await removePermissionCatalog(deleteId)
       loadPermissions()
+      setDeleteId(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Delete failed')
+    } finally {
       setDeleteId(null)
     }
   }
@@ -167,6 +187,13 @@ export default function AdminPermissions() {
         action={{ label: 'Add Permission', onClick: () => { setEditPermission(null); setDrawerOpen(true) }, icon: <Plus size={15} /> }}
       />
 
+      {error && (
+        <div className="mb-4 px-4 py-3 rounded-xl border flex items-center justify-between" style={{ borderColor: '#FECACA', background: '#FEF2F2', color: '#991B1B' }}>
+          <span className="text-sm">{error}</span>
+          <button onClick={() => setError(null)} className="text-sm font-medium">Dismiss</button>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <select value={scopeFilter} onChange={e => setScopeFilter(e.target.value)} className="px-3 py-2 border rounded-lg text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', color: '#04304B' }}>
           <option value="all">All Scopes</option>
@@ -176,7 +203,7 @@ export default function AdminPermissions() {
           <option value="all">All Tags</option>
           {TAGS.map(t => (<option key={t} value={t}>{t}</option>))}
         </select>
-        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{permissions.length} results</span>
+        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{loading ? 'Loading...' : `${permissions.length} results`}</span>
       </div>
 
       <div
@@ -192,7 +219,10 @@ export default function AdminPermissions() {
             </tr>
           </thead>
           <tbody>
-            {permissions.map(p => (
+            {loading ? (
+              <tr><td colSpan={6} className="px-4 py-8 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</td></tr>
+            ) : (
+              permissions.map(p => (
               <tr key={p.id} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
                 <td className="px-4 py-3">
                   <span className="font-mono font-semibold" style={{ color: '#37BBA2', fontSize: 12 }}>{p.code}</span>
@@ -220,7 +250,8 @@ export default function AdminPermissions() {
                   </div>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>
