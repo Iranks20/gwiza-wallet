@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
-import { Link, Outlet, useParams, useLocation } from 'react-router'
+import { Link, Outlet, useParams, useLocation, useOutletContext, Navigate } from 'react-router'
+import type { ConfigureOutletContext } from './ConfigureTabs'
 
 const subTabs = [
   { path: 'permissions', label: 'Type Group Permissions' },
@@ -9,9 +10,18 @@ const subTabs = [
 ]
 
 export default function ProfileTypeGroupsLayout() {
-  const { countryId, groupId } = useParams<{ countryId: string; groupId: string }>()
+  const context = useOutletContext<ConfigureOutletContext>()
+  const params = useParams<{ countryId?: string; groupId?: string }>()
+  const countryId = context?.countryId ?? params.countryId ?? ''
+  const groupId = params.groupId ?? ''
   const location = useLocation()
-  const base = `/admin/settings/countries/${countryId}/configure/profile-types/profile-type-groups/${groupId}`
+  const groupIdNum = groupId !== '' ? parseInt(groupId, 10) : NaN
+  const invalidGroup = groupId === '' || Number.isNaN(groupIdNum)
+  if (invalidGroup && countryId) {
+    return <Navigate to={`/admin/settings/countries/${countryId}/configure/profile-types/profile-type-groups`} replace />
+  }
+  const base = countryId && groupId ? `/admin/settings/countries/${countryId}/configure/profile-types/profile-type-groups/${groupId}` : ''
+  const childContext = { ...context, countryId: countryId || context?.countryId, groupId: groupId || context?.groupId }
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -35,7 +45,7 @@ export default function ProfileTypeGroupsLayout() {
           )
         })}
       </div>
-      <Outlet />
+      <Outlet context={childContext} />
     </div>
   )
 }

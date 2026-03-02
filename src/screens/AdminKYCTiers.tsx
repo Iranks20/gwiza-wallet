@@ -1,35 +1,37 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import Components from '../components'
-import { Plus, Edit2, Trash2, X } from 'lucide-react'
+import { Plus, Edit2, X, Power, PowerOff } from 'lucide-react'
 import type { KycTier } from '@/services/kycTiersService'
-import { listKycTiers, createKycTier, updateKycTier, removeKycTier } from '@/services/kycTiersService'
-import { listCountries } from '@/services/countriesService'
+import { listKycTiers, createKycTier, updateKycTier } from '@/services/kycTiersService'
+import { ApiError } from '@/api/client'
 
-const emptyForm: Omit<KycTier, 'id'> = { country: '', name: '', level: 1, description: '', status: 'active' }
+const emptyForm: Omit<KycTier, 'id'> = { name: '', description: '', status: 'active' }
 
 interface KycTierDrawerProps {
   open: boolean
   onClose: () => void
   tier: KycTier | null
-  countryOptions: string[]
   onSave: (data: KycTier | Omit<KycTier, 'id'>) => void
 }
 
-function KycTierDrawer({ open, onClose, tier, countryOptions, onSave }: KycTierDrawerProps) {
+function KycTierDrawer({ open, onClose, tier, onSave }: KycTierDrawerProps) {
   const [form, setForm] = useState<Omit<KycTier, 'id'> & { id?: number }>({ ...emptyForm })
+  const [error, setError] = useState<string | null>(null)
   useEffect(() => {
-    if (open) setForm(tier ? { ...tier } : { ...emptyForm })
+    if (open) {
+      setForm(tier ? { ...tier } : { ...emptyForm })
+      setError(null)
+    }
   }, [open, tier])
 
   if (!open) return null
   const handleSave = () => {
+    setError(null)
     if (tier?.id) {
-      const { id, ...rest } = form as KycTier
-      onSave({ ...tier, ...rest })
+      onSave({ ...tier, ...form })
     } else {
-      const { id, ...rest } = form
-      onSave(rest as Omit<KycTier, 'id'>)
+      onSave(form as Omit<KycTier, 'id'>)
     }
     onClose()
   }
@@ -44,22 +46,9 @@ function KycTierDrawer({ open, onClose, tier, countryOptions, onSave }: KycTierD
           <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg"><X size={18} /></button>
         </div>
         <div className="flex-1 overflow-auto p-6 space-y-4">
+          {error && <p className="text-sm" style={{ color: '#B91C1C' }}>{error}</p>}
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Country</label>
-            <select
-              value={form.country}
-              onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
-              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer"
-              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
-            >
-              <option value="">Select country</option>
-              {countryOptions.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Tier Name</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Tier Name (min 5 characters)</label>
             <input
               value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -71,20 +60,7 @@ function KycTierDrawer({ open, onClose, tier, countryOptions, onSave }: KycTierD
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Level</label>
-            <input
-              type="number"
-              min={1}
-              value={form.level}
-              onChange={e => setForm(f => ({ ...f, level: parseInt(e.target.value, 10) || 1 }))}
-              className="w-full px-3 py-2.5 border rounded-lg outline-none transition-all text-sm"
-              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
-              onFocus={e => e.target.style.borderColor = '#37BBA2'}
-              onBlur={e => e.target.style.borderColor = '#E5E7EB'}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Description</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Description (min 5 characters)</label>
             <textarea
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -122,39 +98,61 @@ function KycTierDrawer({ open, onClose, tier, countryOptions, onSave }: KycTierD
   )
 }
 
-export default function AdminKYCTiers({ country, embedded }: { country?: string; embedded?: boolean }) {
+export default function AdminKYCTiers({ embedded }: { country?: string; embedded?: boolean }) {
   const [tiers, setTiers] = useState<KycTier[]>([])
-  const [countryOptions, setCountryOptions] = useState<string[]>([])
   const [statusFilter, setStatusFilter] = useState('all')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editTier, setEditTier] = useState<KycTier | null>(null)
-  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [deactivateId, setDeactivateId] = useState<number | null>(null)
+  const [activateId, setActivateId] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const loadTiers = () => listKycTiers({ country, status: statusFilter === 'all' ? undefined : statusFilter }).then(setTiers)
-  useEffect(() => { loadTiers() }, [country, statusFilter])
-  useEffect(() => { listCountries().then(cs => setCountryOptions(cs.map(c => c.name))) }, [])
+  const loadTiers = () => {
+    setError(null)
+    listKycTiers({ status: statusFilter === 'all' ? undefined : statusFilter }).then(setTiers).catch(e => {
+      setError(e instanceof ApiError ? e.message : 'Failed to load tiers')
+    })
+  }
+  useEffect(() => { loadTiers() }, [statusFilter])
 
   const handleSave = async (data: KycTier | Omit<KycTier, 'id'>) => {
-    if ('id' in data && data.id) {
-      await updateKycTier(data.id, data)
-    } else {
-      await createKycTier(data as Omit<KycTier, 'id'>)
-    }
-    loadTiers()
-  }
-  const handleDelete = async () => {
-    if (deleteId != null) {
-      await removeKycTier(deleteId)
+    setError(null)
+    try {
+      if ('id' in data && data.id) {
+        await updateKycTier(data.id, { name: data.name, description: data.description, status: data.status })
+      } else {
+        await createKycTier({ name: data.name, description: data.description, status: data.status })
+      }
       loadTiers()
-      setDeleteId(null)
+      setDrawerOpen(false)
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Failed to save')
     }
   }
 
-  const filtered = tiers.filter(t => {
-    const matchStatus = statusFilter === 'all' || t.status === statusFilter
-    const matchCountry = !country || t.country === country
-    return matchStatus && matchCountry
-  })
+  const handleDeactivate = async () => {
+    if (deactivateId == null) return
+    setError(null)
+    try {
+      await updateKycTier(deactivateId, { status: 'inactive' })
+      loadTiers()
+      setDeactivateId(null)
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Failed to deactivate')
+    }
+  }
+
+  const handleActivate = async () => {
+    if (activateId == null) return
+    setError(null)
+    try {
+      await updateKycTier(activateId, { status: 'active' })
+      loadTiers()
+      setActivateId(null)
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Failed to activate')
+    }
+  }
 
   const content = (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -177,7 +175,8 @@ export default function AdminKYCTiers({ country, embedded }: { country?: string;
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{filtered.length} tiers</span>
+        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{tiers.length} tiers</span>
+        {error && <span className="text-sm" style={{ color: '#B91C1C' }}>{error}</span>}
       </div>
 
       <div
@@ -187,54 +186,26 @@ export default function AdminKYCTiers({ country, embedded }: { country?: string;
         <table className="w-full">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
-              {['Tier Name', 'Level', 'Description', 'Status', 'Actions'].map(h => (
-                <th
-                  key={h}
-                  className="text-left px-4 py-3"
-                  style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}
-                >
-                  {h}
-                </th>
+              {['Tier Name', 'Description', 'Status', 'Date created', 'Actions'].map(h => (
+                <th key={h} className="text-left px-4 py-3" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.map(t => (
-              <tr
-                key={t.id}
-                className="border-b hover:bg-gray-50 transition-colors"
-                style={{ borderColor: '#F3F4F6' }}
-              >
-                <td className="px-4 py-3">
-                  <span style={{ color: '#04304B', fontSize: 13, fontWeight: 500 }}>{t.name}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: '#E8F8F5', color: '#37BBA2' }}>
-                    Level {t.level}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span style={{ color: '#6B7280', fontSize: 13 }}>{t.description}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <Components.StatusBadge status={t.status} size="sm" />
-                </td>
+            {tiers.map(t => (
+              <tr key={t.id} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
+                <td className="px-4 py-3"><span style={{ color: '#04304B', fontSize: 13, fontWeight: 500 }}>{t.name}</span></td>
+                <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 13 }}>{t.description}</span></td>
+                <td className="px-4 py-3"><Components.StatusBadge status={t.status} size="sm" /></td>
+                <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 13 }}>{t.dateCreated ? new Date(t.dateCreated).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</span></td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => { setEditTier(t); setDrawerOpen(true) }}
-                      className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer"
-                      style={{ color: '#37BBA2' }}
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button
-                      onClick={() => setDeleteId(t.id)}
-                      className="p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
-                      style={{ color: '#F44336' }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <button onClick={() => { setEditTier(t); setDrawerOpen(true) }} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
+                    {t.status === 'active' ? (
+                      <button onClick={() => setDeactivateId(t.id)} className="p-1.5 rounded-lg hover:bg-red-50 cursor-pointer" style={{ color: '#F44336' }} title="Deactivate"><PowerOff size={14} /></button>
+                    ) : (
+                      <button onClick={() => setActivateId(t.id)} className="p-1.5 rounded-lg hover:bg-green-50 cursor-pointer" style={{ color: '#4CAF50' }} title="Activate"><Power size={14} /></button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -243,17 +214,11 @@ export default function AdminKYCTiers({ country, embedded }: { country?: string;
         </table>
       </div>
 
-      <KycTierDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} tier={editTier} countryOptions={countryOptions} onSave={handleSave} />
-      <Components.ConfirmModal
-        open={deleteId != null}
-        title="Delete KYC Tier?"
-        message={<>Are you sure you want to delete this tier? This action cannot be undone.</>}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteId(null)}
-      />
+      <KycTierDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} tier={editTier} onSave={handleSave} />
+      <Components.ConfirmModal open={deactivateId != null} title="Deactivate KYC Tier?" message={<>Are you sure you want to deactivate this tier?</>} onConfirm={handleDeactivate} onCancel={() => setDeactivateId(null)} />
+      <Components.ConfirmModal open={activateId != null} title="Activate KYC Tier?" message={<>Are you sure you want to activate this tier?</>} onConfirm={handleActivate} onCancel={() => setActivateId(null)} />
     </div>
   )
 
-  if (embedded) return content
   return content
 }

@@ -1,4 +1,4 @@
-import { useParams } from 'react-router'
+import { useParams, useOutletContext, Outlet } from 'react-router'
 import AdminKYCTiers from './AdminKYCTiers'
 import AdminProfileTypes from './AdminProfileTypes'
 import AdminProfileGroups from './AdminProfileGroups'
@@ -9,67 +9,136 @@ import AdminThresholds from './AdminThresholds'
 import AdminTransactionRules from './AdminTransactionRules'
 import AdminTransactionFees from './AdminTransactionFees'
 
-const countryMap: Record<string, string> = {
-  '1': 'United States', '2': 'United Kingdom', '3': 'Kenya', '4': 'Nigeria',
-  '5': 'Ghana', '6': 'South Africa', '7': 'Rwanda', '8': 'Tanzania',
-  US: 'United States', GB: 'United Kingdom', KE: 'Kenya', NG: 'Nigeria',
-  GH: 'Ghana', ZA: 'South Africa', RW: 'Rwanda', TZ: 'Tanzania',
+export type ConfigureOutletContext = {
+  countryId?: string
+  groupId?: string
+  /** From opcos API – set by CountryConfigure */
+  countryName?: string
+  countryStatus?: string
 }
 
-function useCountryFromParams() {
-  const { countryId } = useParams<{ countryId: string }>()
-  return countryId ? (countryMap[countryId] ?? countryId) : ''
+/** Forwards outlet context so nested profile-types routes receive countryId, countryName, etc. */
+export function ProfileTypesConfigureOutlet() {
+  const context = useOutletContext<ConfigureOutletContext>()
+  return <Outlet context={context} />
+}
+
+function useCountryIdFromConfigure(): string | undefined {
+  const context = useOutletContext<ConfigureOutletContext>()
+  const params = useParams<{ countryId?: string }>()
+  return context?.countryId ?? params.countryId
+}
+
+function useGroupIdFromConfigure(): string | undefined {
+  const context = useOutletContext<ConfigureOutletContext>()
+  const params = useParams<{ groupId?: string }>()
+  return context?.groupId ?? params.groupId
+}
+
+/** Country display name from API (outlet context set by CountryConfigure); fallback to countryId if not loaded yet */
+function useCountryDisplayFromConfigure(): string {
+  const context = useOutletContext<ConfigureOutletContext>()
+  const countryId = useCountryIdFromConfigure()
+  if (context?.countryName) return context.countryName
+  return countryId ? `Country ${countryId}` : ''
 }
 
 export function ConfigureKYCTiers() {
-  const country = useCountryFromParams()
+  const country = useCountryDisplayFromConfigure()
   return <AdminKYCTiers embedded country={country} />
 }
 
 export function ConfigureProfileTypes() {
-  const country = useCountryFromParams()
+  const country = useCountryDisplayFromConfigure()
   return <AdminProfileTypes embedded country={country} />
 }
 
 export function ConfigureProfileTypeGroups() {
-  const country = useCountryFromParams()
-  return <AdminProfileGroups embedded country={country} />
+  const countryId = useCountryIdFromConfigure()
+  const country = useCountryDisplayFromConfigure()
+  return (
+    <AdminProfileGroups
+      embedded
+      country={country}
+      countryId={countryId ? parseInt(countryId, 10) : undefined}
+    />
+  )
 }
 
 export function ConfigureTransactionChannels() {
-  const country = useCountryFromParams()
-  return <AdminChannels embedded country={country} />
+  const countryId = useCountryIdFromConfigure()
+  const country = useCountryDisplayFromConfigure()
+  return (
+    <AdminChannels
+      embedded
+      country={country}
+      countryId={countryId ? parseInt(countryId, 10) : undefined}
+    />
+  )
 }
 
 export function ConfigureSystemAccounts() {
-  const country = useCountryFromParams()
-  return <AdminSystemAccounts embedded country={country} />
+  const countryId = useCountryIdFromConfigure()
+  const country = useCountryDisplayFromConfigure()
+  return (
+    <AdminSystemAccounts
+      embedded
+      country={country}
+      countryId={countryId ? parseInt(countryId, 10) : undefined}
+    />
+  )
 }
 
 export function ConfigureGroupPermissions() {
-  const { countryId, groupId } = useParams<{ countryId: string; groupId: string }>()
-  const country = countryId ? (countryMap[countryId] ?? countryId) : (groupId ?? '')
-  return <AdminGroupPermissions embedded country={country} />
+  const countryId = useCountryIdFromConfigure()
+  const groupId = useGroupIdFromConfigure()
+  const country = useCountryDisplayFromConfigure() || (groupId ?? '')
+  return (
+    <AdminGroupPermissions
+      embedded
+      country={country}
+      countryId={countryId ? parseInt(countryId, 10) : undefined}
+      groupId={groupId ? parseInt(groupId, 10) : undefined}
+    />
+  )
 }
 
 export function ConfigureThresholds() {
-  const country = useCountryFromParams()
-  const { groupId } = useParams<{ groupId?: string }>()
+  const countryId = useCountryIdFromConfigure()
+  const groupId = useGroupIdFromConfigure()
+  const country = useCountryDisplayFromConfigure()
   const groupIdNum = groupId ? parseInt(groupId, 10) : undefined
-  return <AdminThresholds embedded country={country} groupId={groupIdNum} />
+  return (
+    <AdminThresholds
+      embedded
+      country={country}
+      countryId={countryId ? parseInt(countryId, 10) : undefined}
+      groupId={groupIdNum}
+    />
+  )
 }
 
 export function ConfigureTransactionRules() {
-  const { countryId, groupId } = useParams<{ countryId: string; groupId: string }>()
-  const country = countryId ? (countryMap[countryId] ?? countryId) : ''
+  const countryId = useCountryIdFromConfigure()
+  const groupId = useGroupIdFromConfigure()
+  const country = useCountryDisplayFromConfigure()
   const basePath = countryId && groupId
     ? `/admin/settings/countries/${countryId}/configure/profile-types/profile-type-groups/${groupId}`
     : ''
-  return <AdminTransactionRules embedded country={country} configureBasePath={basePath} />
+  return (
+    <AdminTransactionRules
+      embedded
+      country={country}
+      countryId={countryId ? parseInt(countryId, 10) : undefined}
+      groupId={groupId ? parseInt(groupId, 10) : undefined}
+      configureBasePath={basePath}
+    />
+  )
 }
 
 export function ConfigureTransactionFees() {
-  const country = useCountryFromParams()
+  const countryId = useCountryIdFromConfigure()
   const { ruleId } = useParams<{ ruleId?: string }>()
+  const country = useCountryDisplayFromConfigure()
   return <AdminTransactionFees embedded country={country} ruleId={ruleId ? parseInt(ruleId, 10) : undefined} />
 }

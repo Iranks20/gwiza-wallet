@@ -1,7 +1,9 @@
 'use client'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, Outlet, useParams, useLocation } from 'react-router'
 import Components from '../components'
+import { getCountryById } from '@/services/countriesService'
+import type { Country } from '@/api/opcos'
 
 /** Top tabs only: KYC Tiers | Profile Types | Transaction Channels | System Accounts. Profile Type Groups is nested under Profile Types. */
 const configureTabs = [
@@ -11,26 +13,41 @@ const configureTabs = [
   { key: 'system-accounts', label: 'System Accounts', path: 'system-accounts' },
 ] as const
 
-const countryMap: Record<string, string> = {
-  '1': 'United States', '2': 'United Kingdom', '3': 'Kenya', '4': 'Nigeria',
-  '5': 'Ghana', '6': 'South Africa', '7': 'Rwanda', '8': 'Tanzania',
-  US: 'United States', GB: 'United Kingdom', KE: 'Kenya', NG: 'Nigeria',
-  GH: 'Ghana', ZA: 'South Africa', RW: 'Rwanda', TZ: 'Tanzania',
-}
-
 export default function CountryConfigure() {
   const { countryId } = useParams<{ countryId: string }>()
   const location = useLocation()
   const base = `/admin/settings/countries/${countryId}/configure`
-  const countryName = countryId ? (countryMap[countryId] ?? countryId) : '—'
+  const [country, setCountry] = useState<Country | null>(null)
+
+  useEffect(() => {
+    if (!countryId) {
+      setCountry(null)
+      return
+    }
+    const id = parseInt(countryId, 10)
+    if (Number.isNaN(id)) {
+      setCountry(null)
+      return
+    }
+    getCountryById(id).then(setCountry)
+  }, [countryId])
+
+  const countryName = country?.name ?? (countryId ? `Country ${countryId}` : '—')
+  const countryStatus = country?.status ?? 'inactive'
   const path = location.pathname
+
+  const outletContext = {
+    countryId: countryId ?? '',
+    countryName: country?.name ?? '',
+    countryStatus: country?.status ?? 'inactive',
+  }
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
       <Components.AdminPageHeader
         title={countryName}
         subtitle="Configure limits, rules, fees and structures"
-        titleTrailing={<Components.StatusBadge status="active" size="sm" />}
+        titleTrailing={<Components.StatusBadge status={countryStatus} size="sm" />}
       />
 
       <div className="mb-4 flex flex-wrap gap-2 border-b" style={{ borderColor: '#E5E7EB' }}>
@@ -55,7 +72,7 @@ export default function CountryConfigure() {
       </div>
 
       <div>
-        <Outlet />
+        <Outlet context={outletContext} />
       </div>
     </div>
   )

@@ -50,7 +50,7 @@ export default function CountrySettings() {
       case 'profileTypes':
         return <AdminProfileTypes embedded country={countryName} />
       case 'profileGroups':
-        return <AdminProfileGroups embedded country={countryName} />
+        return <AdminProfileGroups embedded country={countryName} countryId={countryId ? parseInt(countryId, 10) : undefined} />
       case 'groupPermissions':
         return <AdminGroupPermissions embedded country={countryName || countryCode} />
       case 'thresholds':
@@ -60,9 +60,9 @@ export default function CountrySettings() {
       case 'fees':
         return <AdminTransactionFees embedded country={countryName} />
       case 'channels':
-        return <AdminChannels embedded country={countryName} />
+        return <AdminChannels embedded country={countryName} countryId={countryId ? parseInt(countryId, 10) : undefined} />
       case 'systemAccounts':
-        return <AdminSystemAccounts embedded country={countryName} />
+        return <AdminSystemAccounts embedded country={countryName} countryId={countryId ? parseInt(countryId, 10) : undefined} />
       default:
         return null
     }

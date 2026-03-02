@@ -33,6 +33,7 @@ import {
   ConfigureThresholds,
   ConfigureTransactionRules,
   ConfigureTransactionFees,
+  ProfileTypesConfigureOutlet,
 } from './screens/ConfigureTabs'
 
 import UserOverview from './screens/UserOverview'
@@ -73,7 +74,7 @@ export default function App() {
         <Route path="settings/countries/:countryId/configure" element={<CountryConfigure />}>
           <Route index element={<Navigate to="kyc-tiers" replace />} />
           <Route path="kyc-tiers" element={<ConfigureKYCTiers />} />
-          <Route path="profile-types" element={<Outlet />}>
+          <Route path="profile-types" element={<ProfileTypesConfigureOutlet />}>
             <Route index element={<ConfigureProfileTypes />} />
             <Route path="profile-type-groups" element={<ConfigureProfileTypeGroups />} />
             <Route path="profile-type-groups/:groupId" element={<ProfileTypeGroupsLayout />}>
