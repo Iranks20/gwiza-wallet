@@ -344,17 +344,17 @@ export default function AdminTransactionRules({
 
       {loading && <p className="mb-2 text-sm" style={{ color: '#6B7280' }}>Loading transaction rules…</p>}
       <div className="rounded-xl border overflow-auto" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <table className="min-w-full">
-          <thead>
-            <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
+          <table className="min-w-full">
+            <thead>
+              <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
               {['Description', 'Country', 'Profile Group', 'Operation', 'Src Channel', 'Dest Channel', 'Status', ...(showFeesLink ? ['Fees'] : []), 'Actions'].map(h => (
                 <th key={h} className="text-left px-4 py-3" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
             {!loading && rules.map(r => (
-              <tr key={r.id} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
+                <tr key={r.id} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
                 <td className="px-4 py-3"><span style={{ color: '#04304B', fontSize: 13, fontWeight: 500 }}>{r.description}</span></td>
                 <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 13 }}>{countryMap[r.countryId] ?? r.countryId}</span></td>
                 <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 13 }}>{groupMap[r.profileTypeGroupId] ?? r.profileTypeGroupId}</span></td>
@@ -369,19 +369,19 @@ export default function AdminTransactionRules({
                     </Link>
                   </td>
                 )}
-                <td className="px-4 py-3">
+                  <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <button onClick={() => { setEditRule(r); setDrawerOpen(true) }} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
                     <button onClick={() => toggleStatus(r)} className="px-2 py-1 rounded-lg text-xs font-medium cursor-pointer" style={{ background: r.status === 'active' ? '#FEE2E2' : '#D1FAE5', color: r.status === 'active' ? '#B91C1C' : '#047857' }}>
                       {r.status === 'active' ? 'Deactivate' : 'Activate'}
                     </button>
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
       <RuleDrawer
         open={drawerOpen}

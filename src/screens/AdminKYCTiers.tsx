@@ -163,6 +163,18 @@ export default function AdminKYCTiers({ embedded }: { country?: string; embedded
           action={{ label: 'Add Tier', onClick: () => { setEditTier(null); setDrawerOpen(true) }, icon: <Plus size={15} /> }}
         />
       )}
+      {embedded && (
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>KYC Tiers</h2>
+          <button
+            onClick={() => { setEditTier(null); setDrawerOpen(true) }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white cursor-pointer hover:opacity-90"
+            style={{ background: '#37BBA2', fontSize: 14 }}
+          >
+            <Plus size={15} /> Add Tier
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center gap-3 mb-4">
         <select
@@ -215,8 +227,22 @@ export default function AdminKYCTiers({ embedded }: { country?: string; embedded
       </div>
 
       <KycTierDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} tier={editTier} onSave={handleSave} />
-      <Components.ConfirmModal open={deactivateId != null} title="Deactivate KYC Tier?" message={<>Are you sure you want to deactivate this tier?</>} onConfirm={handleDeactivate} onCancel={() => setDeactivateId(null)} />
-      <Components.ConfirmModal open={activateId != null} title="Activate KYC Tier?" message={<>Are you sure you want to activate this tier?</>} onConfirm={handleActivate} onCancel={() => setActivateId(null)} />
+      <Components.ConfirmModal
+        open={deactivateId != null}
+        title="Deactivate KYC Tier?"
+        message={<>Are you sure you want to deactivate this tier?</>}
+        confirmLabel="Deactivate"
+        onConfirm={handleDeactivate}
+        onCancel={() => setDeactivateId(null)}
+      />
+      <Components.ConfirmModal
+        open={activateId != null}
+        title="Activate KYC Tier?"
+        message={<>Are you sure you want to activate this tier?</>}
+        confirmLabel="Activate"
+        onConfirm={handleActivate}
+        onCancel={() => setActivateId(null)}
+      />
     </div>
   )
 
