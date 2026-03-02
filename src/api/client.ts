@@ -43,9 +43,9 @@ async function parseResponse<T>(res: Response): Promise<ApiResponse<T>> {
     )
   }
   if (!res.ok) {
-    const b = body as ApiResponse & { errors?: unknown }
+    const b = body as ApiResponse & { errors?: unknown; error?: string }
     const msg = b.resp_msg ?? `Request failed: ${res.status}`
-    const detail = b.resp_code != null ? `${msg} (code ${b.resp_code})` : msg
+    const detail = b.error ?? (b.resp_code != null ? `${msg} (code ${b.resp_code})` : msg)
     throw new ApiError(detail, res.status, b.resp_code, b.resp_msg, b.data, b.errors)
   }
   return body as ApiResponse<T>

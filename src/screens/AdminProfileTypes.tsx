@@ -160,12 +160,25 @@ export default function AdminProfileTypes({ embedded }: { country?: string; embe
       {!embedded && (
         <Components.AdminPageHeader title="Profile Types" subtitle="Define core wallet profile types for customers, agents, and businesses" action={{ label: 'Add Profile Type', onClick: () => { setEditType(null); setDrawerOpen(true) }, icon: <Plus size={15} /> }} />
       )}
-      {embedded && profileTypeGroupsPath && (
-        <div className="mb-4">
-          <Link to={profileTypeGroupsPath} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: '#37BBA2', fontSize: 14 }}>
-            <Users size={16} />
-            Manage Profile Type Groups
-          </Link>
+      {embedded && (
+        <div className="flex items-center justify-between mb-4">
+          {profileTypeGroupsPath && (
+            <Link
+              to={profileTypeGroupsPath}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white cursor-pointer hover:opacity-90 transition-opacity"
+              style={{ background: '#37BBA2', fontSize: 14 }}
+            >
+              <Users size={16} />
+              Manage Profile Type Groups
+            </Link>
+          )}
+          <button
+            onClick={() => { setEditType(null); setDrawerOpen(true) }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white cursor-pointer hover:opacity-90"
+            style={{ background: '#37BBA2', fontSize: 14 }}
+          >
+            <Plus size={15} /> Add Profile Type
+          </button>
         </div>
       )}
       {error && <p className="mb-2 text-sm" style={{ color: '#B91C1C' }}>{error}</p>}
@@ -205,8 +218,22 @@ export default function AdminProfileTypes({ embedded }: { country?: string; embe
         </table>
       </div>
       <ProfileTypeDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} profileType={editType} onSave={handleSave} />
-      <Components.ConfirmModal open={deactivateId != null} title="Deactivate Profile Type?" message={<>Are you sure you want to deactivate this profile type?</>} onConfirm={handleDeactivate} onCancel={() => setDeactivateId(null)} />
-      <Components.ConfirmModal open={activateId != null} title="Activate Profile Type?" message={<>Are you sure you want to activate this profile type?</>} onConfirm={handleActivate} onCancel={() => setActivateId(null)} />
+      <Components.ConfirmModal
+        open={deactivateId != null}
+        title="Deactivate Profile Type?"
+        message={<>Are you sure you want to deactivate this profile type?</>}
+        confirmLabel="Deactivate"
+        onConfirm={handleDeactivate}
+        onCancel={() => setDeactivateId(null)}
+      />
+      <Components.ConfirmModal
+        open={activateId != null}
+        title="Activate Profile Type?"
+        message={<>Are you sure you want to activate this profile type?</>}
+        confirmLabel="Activate"
+        onConfirm={handleActivate}
+        onCancel={() => setActivateId(null)}
+      />
     </div>
   )
   return content
