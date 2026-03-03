@@ -7,6 +7,8 @@ import { getWalletById, updateWallet } from '@/services/walletsService'
 import { listCountries } from '@/services'
 import { Edit2, X } from 'lucide-react'
 import { ApiError } from '@/api/client'
+import { listTransactions } from '@/services/transactionRegisterService'
+import type { TxnRegisterEntry } from '@/services/transactionRegisterService'
 
 type EditWalletFieldErrors = Partial<Record<'walletAccountTag' | 'walletAccountIdentifier' | 'profileTypeGroupId', string>>
 
@@ -68,6 +70,14 @@ export default function AdminWalletDetails() {
     profileTypeGroupId: string
   } | null>(null)
 
+  const [txns, setTxns] = useState<TxnRegisterEntry[]>([])
+  const [txnLoading, setTxnLoading] = useState(false)
+  const [txnError, setTxnError] = useState<string | null>(null)
+  const [txnPage, setTxnPage] = useState(1)
+  const [txnPagination, setTxnPagination] = useState<{ page: number; limit: number; total: number; totalPages: number } | null>(null)
+  const [txnDateFrom, setTxnDateFrom] = useState('')
+  const [txnDateTo, setTxnDateTo] = useState('')
+
   useEffect(() => {
     if (!walletId) {
       setLoading(false)
@@ -97,6 +107,31 @@ export default function AdminWalletDetails() {
       })
     return () => { cancelled = true }
   }, [walletId])
+
+  useEffect(() => {
+    if (!wallet) return
+    let cancelled = false
+    setTxnLoading(true)
+    setTxnError(null)
+    const startDate = txnDateFrom ? new Date(txnDateFrom).toISOString() : undefined
+    const endDate = txnDateTo ? new Date(txnDateTo).toISOString() : undefined
+    listTransactions({ walletId: wallet.walletId, page: txnPage, limit: 10, startDate, endDate })
+      .then(res => {
+        if (cancelled) return
+        setTxns(res.items)
+        setTxnPagination(res.pagination ?? null)
+      })
+      .catch(e => {
+        if (cancelled) return
+        setTxns([])
+        setTxnPagination(null)
+        setTxnError(e instanceof Error ? e.message : 'Failed to load wallet transactions')
+      })
+      .finally(() => {
+        if (!cancelled) setTxnLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [wallet, txnPage, txnDateFrom, txnDateTo])
 
   if (loading) {
     return (
@@ -196,7 +231,7 @@ export default function AdminWalletDetails() {
       />
 
       <div className="rounded-xl border p-5 mb-4" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {[
             { label: 'Available Balance', value: formatBalance(w.availableBalance, w.walletCurrencyCode), highlight: true },
             { label: 'Account Balance', value: formatBalance(w.accountBalance, w.walletCurrencyCode) },
@@ -220,6 +255,89 @@ export default function AdminWalletDetails() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="rounded-xl border p-5 mt-4" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 16 }}>Wallet Transaction Register</h2>
+            <p style={{ color: '#6B7280', fontSize: 12 }}>Transactions for this wallet only. Use the date range to narrow results.</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-end gap-3 mb-4">
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#6B7280' }}>From date</label>
+            <input
+              type="date"
+              value={txnDateFrom}
+              onChange={e => { setTxnDateFrom(e.target.value); setTxnPage(1) }}
+              className="px-3 py-2 border rounded-lg text-sm outline-none"
+              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#6B7280' }}>To date</label>
+            <input
+              type="date"
+              value={txnDateTo}
+              onChange={e => { setTxnDateTo(e.target.value); setTxnPage(1) }}
+              className="px-3 py-2 border rounded-lg text-sm outline-none"
+              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
+            />
+          </div>
+        </div>
+        {txnError && (
+          <div className="mb-3 p-3 rounded-xl border border-red-200 bg-red-50 text-xs" style={{ color: '#B91C1C' }}>
+            {txnError}
+          </div>
+        )}
+        {txnLoading ? (
+          <div className="p-6 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading transactions...</div>
+        ) : txns.length === 0 ? (
+          <div className="p-4 text-center" style={{ color: '#6B7280', fontSize: 13 }}>No transactions found for this wallet.</div>
+        ) : (
+          <>
+            <table className="w-full">
+              <thead>
+                <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
+                  {['Txn ID', 'Type', 'Amount', 'Status', 'Date'].map(h => (
+                    <th key={h} className="text-left px-4 py-2.5" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {txns.map(t => (
+                  <tr key={t.transactionId} className="border-b" style={{ borderColor: '#F3F4F6' }}>
+                    <td className="px-4 py-2.5"><span className="font-mono" style={{ color: '#04304B', fontSize: 12 }}>{t.transactionId}</span></td>
+                    <td className="px-4 py-2.5"><span style={{ color: '#04304B', fontSize: 12 }}>{t.transactionType || t.operationTypeTag || '—'}</span></td>
+                    <td className="px-4 py-2.5"><span className="font-semibold" style={{ color: '#04304B', fontSize: 12 }}>{formatBalance(t.transactionAmount, t.currencyCode)}</span></td>
+                    <td className="px-4 py-2.5"><span style={{ color: '#6B7280', fontSize: 12 }}>{t.txnStatus}</span></td>
+                    <td className="px-4 py-2.5"><span style={{ color: '#6B7280', fontSize: 12 }}>{formatDate(t.transactionDate)}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {txnPagination && (
+              <div className="flex items-center justify-between mt-3">
+                <span style={{ color: '#9CA3AF', fontSize: 12 }}>
+                  Showing {(txnPagination.page - 1) * txnPagination.limit + 1}–{Math.min(txnPagination.page * txnPagination.limit, txnPagination.total)} of {txnPagination.total}
+                </span>
+                <div className="flex gap-1">
+                  {Array.from({ length: txnPagination.totalPages }, (_, i) => i + 1).map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setTxnPage(p)}
+                      className="w-7 h-7 rounded-lg text-xs font-medium cursor-pointer"
+                      style={{ background: p === txnPage ? '#37BBA2' : '#F9FAFB', color: p === txnPage ? '#FFFFFF' : '#6B7280' }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {editOpen && editState && (

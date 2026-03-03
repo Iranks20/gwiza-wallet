@@ -6,7 +6,7 @@ import {
   Shield, Users, Group, Key, Settings2, Sliders, FileText,
   Receipt, Building2, BookOpen, Wallet, ClipboardList, ScrollText,
   Activity, ChevronDown, ChevronRight, Bell, Search, User,
-  LogOut, ChevronLeft, Menu, AlertCircle, CheckCircle, Heart, Zap
+  LogOut, ChevronLeft, Menu, AlertCircle, Heart, Zap
 } from 'lucide-react'
 
 interface NavItem {
@@ -36,14 +36,6 @@ const navItems: NavItem[] = [
       { label: 'Transaction Register', to: '/admin/transactions/register' },
       { label: 'Audit Logs', to: '/admin/transactions/audit-logs' },
       { label: 'Fees Ledger', to: '/admin/transactions/fees-ledger' },
-    ],
-  },
-  {
-    label: 'System Health',
-    icon: <CheckCircle size={18} />,
-    children: [
-      { label: 'Health', to: '/admin/system/health' },
-      { label: 'Ready', to: '/admin/system/ready' },
     ],
   },
 ]

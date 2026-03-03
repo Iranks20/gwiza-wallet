@@ -1,7 +1,8 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import Components from '../components'
-import { Search, Filter, Eye, X, Plus, Edit2, RotateCcw } from 'lucide-react'
+import { Link } from '@/lib'
+import { Search, Filter, Eye, X, Plus, RotateCcw } from 'lucide-react'
 import { listWallets, listCountries, listKycTiers, listProfileTypes, listProfileTypeGroups } from '@/services'
 import { createWallet, updateWallet } from '@/services/walletsService'
 import type { Wallet } from '@/api/wallets'
@@ -132,63 +133,6 @@ const emptyForm: WalletFormState = {
   walletAccountTag: '',
   walletAccountIdentifier: '',
   walletStatus: 'active',
-}
-
-function WalletDetailModal({ wallet, countryName, onClose }: { wallet: Wallet; countryName: string; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState('overview')
-  const tabs = ['overview']
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif", boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
-          <div>
-            <h2 className="font-bold" style={{ color: '#04304B', fontSize: 18 }}>Wallet Details</h2>
-            <p style={{ color: '#9CA3AF', fontSize: 13 }}>ID {wallet.walletId} · {wallet.walletAccountNo ?? '—'}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Components.StatusBadge status={wallet.walletStatus} />
-            <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={18} /></button>
-          </div>
-        </div>
-        <div className="flex gap-1 px-6 pt-4 border-b" style={{ borderColor: '#E5E7EB' }}>
-          {tabs.map(t => (
-            <button key={t} onClick={() => setActiveTab(t)} className="px-4 py-2 text-sm font-medium capitalize rounded-t-lg cursor-pointer transition-colors border-b-2" style={{
-              color: activeTab === t ? '#37BBA2' : '#6B7280',
-              borderColor: activeTab === t ? '#37BBA2' : 'transparent',
-              fontSize: 13
-            }}>{t}</button>
-          ))}
-        </div>
-        <div className="flex-1 overflow-auto p-6">
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: 'Available Balance', value: formatBalance(wallet.availableBalance, wallet.walletCurrencyCode), highlight: true },
-                  { label: 'Account Balance', value: formatBalance(wallet.accountBalance, wallet.walletCurrencyCode), highlight: false },
-                  { label: 'Member ID', value: String(wallet.memberId) },
-                  { label: 'Member Profile ID', value: String(wallet.memberProfileId) },
-                  { label: 'MSISDN', value: wallet.linkedMsisdn },
-                  { label: 'Country', value: countryName || `ID ${wallet.walletCountryId}` },
-                  { label: 'Currency', value: wallet.walletCurrencyCode },
-                  { label: 'Profile Type', value: wallet.profileType },
-                  { label: 'Profile Type Group ID', value: String(wallet.profileTypeGroupId) },
-                  { label: 'Status', value: wallet.walletStatus },
-                  { label: 'Created', value: formatDate(wallet.dateCreated) },
-                ].map((item, i) => (
-                  <div key={i} className="p-4 rounded-xl" style={{ background: item.highlight ? '#E8F8F5' : '#FAFBFC', border: '1px solid #E5E7EB' }}>
-                    <p style={{ color: '#9CA3AF', fontSize: 12 }}>{item.label}</p>
-                    <p className="font-semibold mt-1" style={{ color: item.highlight ? '#37BBA2' : '#04304B', fontSize: item.highlight ? 20 : 14 }}>{item.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
 }
 
 interface WalletDrawerProps {
@@ -503,173 +447,6 @@ function WalletDrawer({ open, onClose, countries, kycTiers, profileTypes, onCrea
   )
 }
 
-interface EditWalletDrawerProps {
-  wallet: Wallet
-  onClose: () => void
-  onSaved: () => void
-}
-
-const editFieldErrStyle = { color: '#B91C1C', fontSize: 12, marginTop: 4 } as const
-
-function EditWalletDrawer({ wallet, onClose, onSaved }: EditWalletDrawerProps) {
-  const [editState, setEditState] = useState({
-    walletStatus: wallet.walletStatus,
-    walletAccountTag: wallet.walletAccountTag ?? '',
-    walletAccountIdentifier: wallet.walletAccountIdentifier ?? '',
-    profileTypeGroupId: String(wallet.profileTypeGroupId ?? ''),
-  })
-  const [profileTypeGroups, setProfileTypeGroups] = useState<{ id: number; name: string }[]>([])
-  const [saving, setSaving] = useState(false)
-  const [editError, setEditError] = useState<string | null>(null)
-  const [editFieldErrors, setEditFieldErrors] = useState<EditWalletFieldErrors>({})
-
-  useEffect(() => {
-    listProfileTypeGroups({ countryId: wallet.walletCountryId, status: 'active' })
-      .then(groups => setProfileTypeGroups(groups.map(g => ({ id: g.id, name: g.name }))))
-      .catch(() => setProfileTypeGroups([]))
-  }, [wallet.walletCountryId])
-
-  useEffect(() => {
-    setEditState({
-      walletStatus: wallet.walletStatus,
-      walletAccountTag: wallet.walletAccountTag ?? '',
-      walletAccountIdentifier: wallet.walletAccountIdentifier ?? '',
-      profileTypeGroupId: String(wallet.profileTypeGroupId ?? ''),
-    })
-    setEditError(null)
-    setEditFieldErrors({})
-  }, [wallet])
-
-  const handleEditSave = async () => {
-    setSaving(true)
-    setEditError(null)
-    setEditFieldErrors({})
-    const validationErrors = validateEditWalletForm(editState)
-    if (Object.keys(validationErrors).length > 0) {
-      setEditFieldErrors(validationErrors)
-      setSaving(false)
-      return
-    }
-    try {
-      const body: {
-        wallet_status?: 'active' | 'inactive' | 'suspended' | 'closed'
-        wallet_account_tag?: string | null
-        wallet_account_identifier?: string | null
-        profile_type_group_id?: number
-      } = {}
-      if (editState.walletStatus !== wallet.walletStatus) body.wallet_status = editState.walletStatus
-      const trimmedTag = editState.walletAccountTag.trim()
-      const trimmedIdentifier = editState.walletAccountIdentifier.trim()
-      body.wallet_account_tag = trimmedTag ? trimmedTag : null
-      body.wallet_account_identifier = trimmedIdentifier ? trimmedIdentifier : null
-      const grpIdNum = editState.profileTypeGroupId ? Number(editState.profileTypeGroupId) : NaN
-      if (!Number.isNaN(grpIdNum) && grpIdNum >= 1) body.profile_type_group_id = grpIdNum
-
-      await updateWallet(wallet.walletId, body)
-      onSaved()
-      onClose()
-    } catch (e) {
-      const msg = e instanceof ApiError ? e.message : (e instanceof Error ? e.message : 'Failed to update wallet')
-      if (e instanceof ApiError && e.status === 400 && msg) {
-        const apiFieldErrors = parseEditWalletApiErrors(msg)
-        if (Object.keys(apiFieldErrors).length > 0) {
-          setEditFieldErrors(apiFieldErrors)
-          setSaving(false)
-          return
-        }
-      }
-      setEditError(msg)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-96 bg-white h-full shadow-2xl flex flex-col overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
-        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
-          <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>Edit Wallet</h2>
-          <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg"><X size={18} /></button>
-        </div>
-        <div className="flex-1 overflow-auto p-6 space-y-4">
-          {editError && (
-            <div className="mb-2 p-2 rounded border border-red-200 bg-red-50 text-xs" style={{ color: '#B91C1C' }}>{editError}</div>
-          )}
-          <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Status</label>
-            <select
-              value={editState.walletStatus}
-              onChange={e => setEditState(s => ({ ...s, walletStatus: e.target.value as typeof s.walletStatus }))}
-              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer"
-              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-              <option value="closed">Closed</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Profile type group</label>
-            <select
-              value={editState.profileTypeGroupId}
-              onChange={e => { setEditState(s => ({ ...s, profileTypeGroupId: e.target.value })); setEditFieldErrors(prev => ({ ...prev, profileTypeGroupId: undefined })) }}
-              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer"
-              style={{ borderColor: editFieldErrors.profileTypeGroupId ? '#B91C1C' : '#E5E7EB', color: '#04304B', fontSize: 13 }}
-            >
-              <option value="">None</option>
-              {profileTypeGroups.map(g => (
-                <option key={g.id} value={String(g.id)}>{g.name} (ID {g.id})</option>
-              ))}
-            </select>
-            {editFieldErrors.profileTypeGroupId && <p style={editFieldErrStyle}>{editFieldErrors.profileTypeGroupId}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Wallet account tag (max 15 chars)</label>
-            <input
-              value={editState.walletAccountTag}
-              onChange={e => { setEditState(s => ({ ...s, walletAccountTag: e.target.value })); setEditFieldErrors(prev => ({ ...prev, walletAccountTag: undefined })) }}
-              maxLength={15}
-              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm"
-              style={{ borderColor: editFieldErrors.walletAccountTag ? '#B91C1C' : '#E5E7EB', color: '#04304B', fontSize: 13 }}
-            />
-            {editFieldErrors.walletAccountTag && <p style={editFieldErrStyle}>{editFieldErrors.walletAccountTag}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Wallet account identifier (max 25 chars)</label>
-            <input
-              value={editState.walletAccountIdentifier}
-              onChange={e => { setEditState(s => ({ ...s, walletAccountIdentifier: e.target.value })); setEditFieldErrors(prev => ({ ...prev, walletAccountIdentifier: undefined })) }}
-              maxLength={25}
-              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm"
-              style={{ borderColor: editFieldErrors.walletAccountIdentifier ? '#B91C1C' : '#E5E7EB', color: '#04304B', fontSize: 13 }}
-            />
-            {editFieldErrors.walletAccountIdentifier && <p style={editFieldErrStyle}>{editFieldErrors.walletAccountIdentifier}</p>}
-          </div>
-        </div>
-        <div className="p-6 border-t flex gap-3" style={{ borderColor: '#E5E7EB' }}>
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-lg border font-medium cursor-pointer hover:bg-gray-50 transition-colors"
-            style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 14 }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleEditSave}
-            disabled={saving}
-            className="flex-1 py-2.5 rounded-lg font-medium text-white cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60"
-            style={{ background: '#37BBA2', fontSize: 14 }}
-          >
-            {saving ? 'Saving…' : 'Save Changes'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function AdminWallets() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -682,8 +459,6 @@ export default function AdminWallets() {
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<{ page: number; limit: number; total: number; totalPages: number } | null>(null)
   const [page, setPage] = useState(1)
-  const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null)
-  const [editWallet, setEditWallet] = useState<Wallet | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -1046,7 +821,7 @@ export default function AdminWallets() {
               </thead>
               <tbody>
                 {filtered.map(w => (
-                  <tr key={w.walletId} className="border-b hover:bg-gray-50 transition-colors cursor-pointer" style={{ borderColor: '#F3F4F6' }} onClick={() => setSelectedWallet(w)}>
+                  <tr key={w.walletId} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
                     <td className="px-4 py-3"><span className="font-mono font-semibold" style={{ color: '#37BBA2', fontSize: 12 }}>{w.walletId}</span></td>
                     <td className="px-4 py-3"><span className="font-mono" style={{ color: '#04304B', fontSize: 12 }}>{w.walletAccountNo ?? '—'}</span></td>
                     <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{w.memberId}</span></td>
@@ -1056,11 +831,14 @@ export default function AdminWallets() {
                     <td className="px-4 py-3"><span className="font-semibold" style={{ color: '#04304B', fontSize: 12 }}>{formatBalance(w.availableBalance, w.walletCurrencyCode)}</span></td>
                     <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{w.profileType}</span></td>
                     <td className="px-4 py-3"><Components.StatusBadge status={w.walletStatus} size="sm" /></td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setSelectedWallet(w)} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }} title="View details"><Eye size={14} /></button>
-                        <button onClick={() => setEditWallet(w)} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }} title="Edit wallet"><Edit2 size={14} /></button>
-                      </div>
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`/admin/wallets/${w.walletId}`}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer"
+                        style={{ background: '#E8F8F5', color: '#037F67' }}
+                      >
+                        <Eye size={12} /> View
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -1082,13 +860,6 @@ export default function AdminWallets() {
         )}
       </div>
 
-      {selectedWallet && (
-        <WalletDetailModal
-          wallet={selectedWallet}
-          countryName={countryIdToName[selectedWallet.walletCountryId] ?? ''}
-          onClose={() => setSelectedWallet(null)}
-        />
-      )}
       <WalletDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -1097,16 +868,6 @@ export default function AdminWallets() {
         profileTypes={profileTypes}
         onCreated={handleCreated}
       />
-      {editWallet && (
-        <EditWalletDrawer
-          wallet={editWallet}
-          onClose={() => setEditWallet(null)}
-          onSaved={() => {
-            setEditWallet(null)
-            setRefreshKey(k => k + 1)
-          }}
-        />
-      )}
     </div>
   )
 }
