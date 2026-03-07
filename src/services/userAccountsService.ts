@@ -43,3 +43,17 @@ export async function listUserAccounts(
   return useraccountsApi.list({ page, limit })
 }
 
+export type UpdateUserAccountBody = {
+  access_level: number
+  country_id: number
+  user_profile_type: string
+  user_account_status: 'new' | 'active' | 'inactive' | 'suspended'
+}
+
+export async function updateUserAccount(
+  user_account_id: number,
+  body: UpdateUserAccountBody
+): Promise<void> {
+  await useraccountsApi.update(user_account_id, body)
+}
+

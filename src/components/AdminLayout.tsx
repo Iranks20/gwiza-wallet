@@ -2,12 +2,11 @@
 import React, { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import {
-  LayoutDashboard, Globe, DollarSign, ArrowLeftRight, Radio,
-  Shield, Users, Group, Key, Settings2, Sliders, FileText,
-  Receipt, Building2, BookOpen, Wallet, ClipboardList, ScrollText,
-  Activity, ChevronDown, ChevronRight, Bell, Search, User,
-  LogOut, ChevronLeft, Menu, AlertCircle, Heart, Zap
+  LayoutDashboard, Sliders, Users, Wallet, Activity,
+  ChevronDown, ChevronRight, Bell, Search, LogOut, ChevronLeft, Menu
 } from 'lucide-react'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
 
 interface NavItem {
   label: string
@@ -45,7 +44,9 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const path = location.pathname
+  const isMobile = useIsMobile()
   const [collapsed, setCollapsed] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -67,76 +68,81 @@ export default function AdminLayout() {
     setExpandedGroups(prev => Array.from(new Set([...prev, ...groupsToExpand])))
   }, [path])
 
-  return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#FAFBFC', fontFamily: "'Poppins', sans-serif" }}>
-      {/* Sidebar */}
-      <aside
-        className="flex flex-col transition-all duration-300 shrink-0"
-        style={{
-          width: collapsed ? 64 : 240,
-          background: '#04304B',
-          boxShadow: '2px 0 8px rgba(0,0,0,0.12)'
-        }}
-      >
-        <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#37BBA2' }}>
-                <Wallet size={16} color="white" />
-              </div>
-              <span className="font-bold text-white text-sm tracking-wide">GwizaWallet</span>
+  useEffect(() => {
+    if (!isMobile) setSidebarOpen(false)
+  }, [isMobile])
+
+  const closeSidebar = () => {
+    if (isMobile) setSidebarOpen(false)
+  }
+
+  const sidebarContent = (
+    <>
+      <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+        {!collapsed && (
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary shrink-0">
+              <Wallet size={16} className="text-primary-foreground" />
             </div>
-          )}
-          {collapsed && (
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto" style={{ background: '#37BBA2' }}>
-              <Wallet size={16} color="white" />
-            </div>
-          )}
-          {!collapsed && (
-            <button onClick={() => setCollapsed(true)} className="text-white/60 hover:text-white cursor-pointer">
-              <ChevronLeft size={16} />
-            </button>
-          )}
-        </div>
+            <span className="font-bold text-white text-sm tracking-wide">GwizaWallet</span>
+          </div>
+        )}
         {collapsed && (
-          <button onClick={() => setCollapsed(false)} className="flex justify-center py-2 text-white/60 hover:text-white cursor-pointer">
-            <Menu size={16} />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-primary shrink-0">
+            <Wallet size={16} className="text-primary-foreground" />
+          </div>
+        )}
+        {!collapsed && !isMobile && (
+          <button
+            onClick={() => setCollapsed(true)}
+            className="text-white/60 hover:text-white cursor-pointer p-1 rounded hover:bg-white/10 transition-colors"
+            aria-label="Collapse sidebar"
+          >
+            <ChevronLeft size={16} />
           </button>
         )}
+      </div>
+      {collapsed && !isMobile && (
+        <button
+          onClick={() => setCollapsed(false)}
+          className="flex justify-center py-2 text-white/60 hover:text-white cursor-pointer w-full"
+          aria-label="Expand sidebar"
+        >
+          <Menu size={16} />
+        </button>
+      )}
 
-        <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin">
-          {navItems.map(item => {
-            const isDirectActive = item.to && path.startsWith(item.to)
-            const isSectionActive =
-              !item.to &&
-              item.children?.some(child => path.startsWith(child.to))
-            return (
-              <div key={item.label}>
-                {item.to ? (
-                  <Link
-                    to={item.to}
-                    className="flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer"
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: isDirectActive ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
-                      background: isDirectActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                    }}
-                  >
-                    <span className="shrink-0">{item.icon}</span>
-                    {!collapsed && <span>{item.label}</span>}
-                  </Link>
-                ) : (
+      <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin">
+        {navItems.map(item => {
+          const isDirectActive = item.to && path.startsWith(item.to)
+          const isSectionActive =
+            !item.to && item.children?.some(child => path.startsWith(child.to))
+          return (
+            <div key={item.label}>
+              {item.to ? (
+                <Link
+                  to={item.to}
+                  onClick={closeSidebar}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer text-sm font-medium',
+                    isDirectActive
+                      ? 'text-white bg-white/10'
+                      : 'text-white/70 hover:text-white hover:bg-white/5'
+                  )}
+                >
+                  <span className="shrink-0">{item.icon}</span>
+                  {!collapsed && <span>{item.label}</span>}
+                </Link>
+              ) : (
                 <>
                   <button
                     onClick={() => toggleGroup(item.label)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer"
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: isSectionActive ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
-                      background: isSectionActive ? 'rgba(255,255,255,0.04)' : 'transparent',
-                    }}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer text-sm font-medium',
+                      isSectionActive
+                        ? 'text-white bg-white/5'
+                        : 'text-white/70 hover:text-white hover:bg-white/5'
+                    )}
                   >
                     <span className="shrink-0">{item.icon}</span>
                     {!collapsed && (
@@ -152,13 +158,13 @@ export default function AdminLayout() {
                         <Link
                           key={child.to}
                           to={child.to}
-                          className="flex items-center gap-3 pl-11 pr-4 py-2 transition-colors cursor-pointer"
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 400,
-                            color: path.startsWith(child.to) ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
-                            background: path.startsWith(child.to) ? 'rgba(255,255,255,0.10)' : 'transparent',
-                          }}
+                          onClick={closeSidebar}
+                          className={cn(
+                            'flex items-center gap-3 pl-11 pr-4 py-2 transition-colors cursor-pointer text-xs',
+                            path.startsWith(child.to)
+                              ? 'text-white bg-white/10'
+                              : 'text-white/70 hover:text-white hover:bg-white/5'
+                          )}
                         >
                           <span className="w-1 h-1 rounded-full bg-current shrink-0" />
                           {child.label}
@@ -168,76 +174,104 @@ export default function AdminLayout() {
                   )}
                 </>
               )}
-              </div>
-            )
-          })}
-        </nav>
-
-        {!collapsed && (
-          <div className="border-t border-white/10 p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: '#37BBA2' }}>
-                AD
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-xs font-semibold truncate">Admin User</p>
-                <p className="text-white/50 text-xs truncate">admin@fintech.io</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate('/auth')}
-                className="cursor-pointer"
-              >
-                <LogOut size={14} className="text-white/40 hover:text-white" />
-              </button>
             </div>
+          )
+        })}
+      </nav>
+
+      {!collapsed && (
+        <div className="border-t border-white/10 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-primary-foreground text-xs font-bold bg-primary shrink-0">
+              AD
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-xs font-semibold truncate">Admin User</p>
+              <p className="text-white/50 text-xs truncate">admin@fintech.io</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { navigate('/auth'); closeSidebar() }}
+              className="cursor-pointer p-1 rounded hover:bg-white/10 transition-colors"
+              aria-label="Sign out"
+            >
+              <LogOut size={14} className="text-white/40 hover:text-white" />
+            </button>
           </div>
+        </div>
+      )}
+    </>
+  )
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-background font-sans">
+      {/* Mobile sidebar backdrop */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'flex flex-col shrink-0 bg-secondary shadow-lg transition-all duration-300 z-50',
+          isMobile
+            ? 'fixed inset-y-0 left-0 w-64 transform transition-transform'
+            : 'w-16',
+          !isMobile && !collapsed && 'w-60',
+          isMobile && !sidebarOpen && '-translate-x-full'
         )}
+      >
+        {sidebarContent}
       </aside>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 flex items-center gap-4 px-6 border-b shrink-0" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div className="flex-1 max-w-md">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <header className="h-14 lg:h-16 flex items-center gap-3 lg:gap-4 px-4 lg:px-6 border-b border-border bg-card shrink-0 shadow-sm">
+          {isMobile && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu size={20} className="text-foreground" />
+            </button>
+          )}
+          <div className="flex-1 min-w-0 max-w-md">
             <div className="relative">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <input
                 placeholder="Search wallet ID, txn ID, MSISDN..."
-                className="w-full pl-9 pr-4 py-2 text-sm border rounded-lg outline-none focus:ring-2 transition-all"
-                style={{
-                  borderColor: '#E5E7EB',
-                  background: '#FAFBFC',
-                  color: '#04304B',
-                  fontSize: 13,
-                  borderRadius: 8,
-                }}
-                onFocus={e => { e.target.style.borderColor = '#37BBA2'; e.target.style.boxShadow = '0 0 0 3px rgba(55,187,162,0.15)' }}
-                onBlur={e => { e.target.style.borderColor = '#E5E7EB'; e.target.style.boxShadow = 'none' }}
+                className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-muted/50 text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary admin-input"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-3 ml-auto">
+          <div className="flex items-center gap-2 lg:gap-3 shrink-0">
             <div className="relative">
               <button
-                onClick={() => setNotifOpen(!notifOpen)}
-                className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false) }}
+                className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted cursor-pointer transition-colors min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0"
+                aria-label="Notifications"
               >
-                <Bell size={18} style={{ color: '#04304B' }} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ background: '#FF6B35' }} />
+                <Bell size={18} className="text-foreground" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-chart-2" />
               </button>
               {notifOpen && (
-                <div className="absolute right-0 top-11 w-80 bg-white rounded-xl border shadow-lg z-50" style={{ borderColor: '#E5E7EB' }}>
-                  <div className="p-4 border-b" style={{ borderColor: '#E5E7EB' }}>
-                    <h3 className="font-semibold text-sm" style={{ color: '#04304B' }}>Notifications</h3>
+                <div className="absolute right-0 top-11 w-72 lg:w-80 bg-card rounded-xl border border-border shadow-lg z-50">
+                  <div className="p-4 border-b border-border">
+                    <h3 className="font-semibold text-sm text-foreground">Notifications</h3>
                   </div>
                   {[
                     { msg: '5 transactions flagged by rules', time: '2m ago' },
                     { msg: 'New KYC submission: WLT-00821', time: '14m ago' },
                     { msg: 'System health check passed', time: '1h ago' },
                   ].map((n, i) => (
-                    <div key={i} className="p-4 border-b hover:bg-gray-50 cursor-pointer" style={{ borderColor: '#E5E7EB' }}>
-                      <p className="text-xs font-medium" style={{ color: '#04304B' }}>{n.msg}</p>
-                      <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>{n.time}</p>
+                    <div key={i} className="p-4 border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors">
+                      <p className="text-sm font-medium text-foreground">{n.msg}</p>
+                      <p className="text-xs mt-0.5 text-muted-foreground">{n.time}</p>
                     </div>
                   ))}
                 </div>
@@ -246,23 +280,22 @@ export default function AdminLayout() {
 
             <div className="relative">
               <button
-                onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false) }}
+                className="flex items-center gap-2 px-2 lg:px-3 py-1.5 rounded-lg hover:bg-muted cursor-pointer transition-colors min-h-[44px] lg:min-h-0"
               >
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: '#37BBA2' }}>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-primary-foreground text-xs font-bold bg-primary shrink-0">
                   AD
                 </div>
-                <span className="text-sm font-medium" style={{ color: '#04304B', fontSize: 13 }}>Admin</span>
-                <ChevronDown size={14} style={{ color: '#9CA3AF' }} />
+                <span className="text-sm font-medium text-foreground hidden sm:inline">Admin</span>
+                <ChevronDown size={14} className="text-muted-foreground hidden sm:inline" />
               </button>
               {profileOpen && (
-                <div className="absolute right-0 top-11 w-48 bg-white rounded-xl border shadow-lg z-50" style={{ borderColor: '#E5E7EB' }}>
+                <div className="absolute right-0 top-11 w-48 bg-card rounded-xl border border-border shadow-lg z-50">
                   {['My Profile', 'Settings', 'Sign Out'].map((item, i) => (
                     <button
                       key={i}
-                      onClick={() => { if (item === 'Sign Out') navigate('/auth') }}
-                      className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 cursor-pointer transition-colors"
-                      style={{ color: '#04304B', fontSize: 13 }}
+                      onClick={() => { if (item === 'Sign Out') navigate('/auth'); setProfileOpen(false) }}
+                      className="w-full text-left px-4 py-3 text-sm hover:bg-muted/50 cursor-pointer transition-colors text-foreground first:rounded-t-xl last:rounded-b-xl"
                     >
                       {item}
                     </button>
@@ -273,7 +306,7 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-6" style={{ background: '#FAFBFC' }}>
+        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-background">
           <Outlet />
         </main>
       </div>

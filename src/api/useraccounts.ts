@@ -109,5 +109,17 @@ export const useraccountsApi = {
     const items = extractList(res).map(dtoToUser)
     return { items, pagination: res.pagination }
   },
+
+  async update(
+    user_account_id: number,
+    body: {
+      access_level: number
+      country_id: number
+      user_profile_type: string
+      user_account_status: 'new' | 'active' | 'inactive' | 'suspended'
+    }
+  ): Promise<void> {
+    await apiClient.put(`/useraccounts/id/${user_account_id}`, body)
+  },
 }
 

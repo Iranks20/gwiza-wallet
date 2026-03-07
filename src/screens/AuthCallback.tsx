@@ -16,13 +16,8 @@ export default function AuthCallback() {
   }, [navigate])
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center p-6"
-      style={{ background: '#FAFBFC', fontFamily: "'Poppins', sans-serif" }}
-    >
-      <p className="text-center" style={{ color: '#04304B' }}>
-        Redirecting to sign in…
-      </p>
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background font-sans">
+      <p className="text-center text-foreground">Redirecting to sign in…</p>
     </div>
   )
 }

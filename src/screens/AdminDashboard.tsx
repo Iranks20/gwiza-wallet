@@ -14,6 +14,7 @@ import { listFeesLedgerEntries } from '@/services/feesLedgerService'
 import { listAuditLogs } from '@/services/transactionAuditLogsService'
 import type { TxnRegisterEntry } from '@/services/transactionRegisterService'
 import type { TxnAuditLog } from '@/services/transactionAuditLogsService'
+import { cn } from '@/lib/utils'
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -58,6 +59,14 @@ function formatAmount(amount: number, currency: string): string {
   return `${currency} ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+const KPI_STYLES = {
+  primary: { icon: 'bg-primary-muted text-primary', trend: 'text-success' },
+  info: { icon: 'bg-info-muted text-info', trend: 'text-success' },
+  success: { icon: 'bg-success-muted text-success', trend: 'text-success' },
+  error: { icon: 'bg-error-muted text-error', trend: 'text-error' },
+  warning: { icon: 'bg-warning-muted text-warning', trend: 'text-error' },
+} as const
+
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -82,11 +91,9 @@ export default function AdminDashboard() {
     const todayEnd = `${todayStr}T23:59:59.999Z`
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = yesterday.toISOString().slice(0, 10)
     const sevenDaysAgo = new Date(today)
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
     sevenDaysAgo.setHours(0, 0, 0, 0)
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10)
 
     Promise.all([
       listWallets({ page: 1, limit: 1 }),
@@ -163,138 +170,101 @@ export default function AdminDashboard() {
         ? `${failedToday - failedYesterday >= 0 ? '+' : ''}${failedToday - failedYesterday} vs yesterday`
         : '—'
     return [
-      {
-        label: 'Total Wallets',
-        value: walletsTotal != null ? walletsTotal.toLocaleString() : '—',
-        change: walletChange,
-        up: true,
-        icon: <Wallet size={22} />,
-        color: '#37BBA2',
-        bg: '#E8F8F5',
-      },
-      {
-        label: 'Transactions Today',
-        value: txnToday.toLocaleString(),
-        change: txnChange,
-        up: txnToday >= txnYesterday,
-        icon: <ArrowLeftRight size={22} />,
-        color: '#2196F3',
-        bg: '#EFF6FF',
-      },
-      {
-        label: 'Fees Collected Today',
-        value: feesToday > 0 ? feesToday.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—',
-        change: 'today',
-        up: true,
-        icon: <DollarSign size={22} />,
-        color: '#0F8B3C',
-        bg: '#F0FDF4',
-      },
-      {
-        label: 'Failed Transactions',
-        value: String(failedToday),
-        change: failedChange,
-        up: false,
-        icon: <XCircle size={22} />,
-        color: '#F44336',
-        bg: '#FEF2F2',
-      },
-      {
-        label: 'Rule Blocks',
-        value: String(ruleBlocks),
-        change: 'from audit',
-        up: false,
-        icon: <ShieldAlert size={22} />,
-        color: '#FF9800',
-        bg: '#FFF7ED',
-      },
+      { label: 'Total Wallets', value: walletsTotal != null ? walletsTotal.toLocaleString() : '—', change: walletChange, up: true, icon: <Wallet size={22} />, style: 'primary' as const },
+      { label: 'Transactions Today', value: txnToday.toLocaleString(), change: txnChange, up: txnToday >= txnYesterday, icon: <ArrowLeftRight size={22} />, style: 'info' as const },
+      { label: 'Fees Collected Today', value: feesToday > 0 ? feesToday.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—', change: 'today', up: true, icon: <DollarSign size={22} />, style: 'success' as const },
+      { label: 'Failed Transactions', value: String(failedToday), change: failedChange, up: false, icon: <XCircle size={22} />, style: 'error' as const },
+      { label: 'Rule Blocks', value: String(ruleBlocks), change: 'from audit', up: false, icon: <ShieldAlert size={22} />, style: 'warning' as const },
     ]
   }, [walletsTotal, txnToday, txnYesterday, feesToday, failedToday, failedYesterday, ruleBlocks])
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div className="font-sans">
       <div className="mb-6">
-        <h1 className="font-bold" style={{ color: '#04304B', fontSize: 24 }}>Dashboard</h1>
-        <p style={{ color: '#6B7280', fontSize: 14 }}>Welcome back — here's what's happening today.</p>
+        <h1 className="font-bold text-2xl text-foreground">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Welcome back — here's what's happening today.</p>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm">{error}</div>
+        <div className="mb-4 p-4 rounded-xl border border-error/30 bg-error-muted text-error text-sm">{error}</div>
       )}
 
-      <div className="grid grid-cols-5 gap-4 mb-6">
-        {kpis.map((kpi, i) => (
-          <div key={i} className="rounded-xl p-5 border" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-11 h-11 rounded-lg flex items-center justify-center" style={{ background: kpi.bg, color: kpi.color }}>
-                {kpi.icon}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+        {kpis.map((kpi, i) => {
+          const styles = KPI_STYLES[kpi.style]
+          return (
+            <div key={i} className="rounded-xl p-5 border border-border bg-card shadow-sm">
+              <div className="flex items-start justify-between mb-3">
+                <div className={cn('w-11 h-11 rounded-lg flex items-center justify-center', styles.icon)}>
+                  {kpi.icon}
+                </div>
+                <span className={cn('flex items-center gap-1 text-xs font-medium', styles.trend)}>
+                  {kpi.up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                </span>
               </div>
-              <span className="flex items-center gap-1 text-xs font-medium" style={{ color: kpi.up ? '#4CAF50' : '#F44336' }}>
-                {kpi.up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-              </span>
+              <p className="font-bold text-xl text-foreground">{kpi.value}</p>
+              <p className="text-xs mt-0.5 font-medium text-muted-foreground">{kpi.label}</p>
+              <p className={cn('text-xs mt-1', styles.trend)}>{kpi.change}</p>
             </div>
-            <p className="font-bold" style={{ color: '#04304B', fontSize: 22 }}>{kpi.value}</p>
-            <p className="text-xs mt-0.5 font-medium" style={{ color: '#6B7280' }}>{kpi.label}</p>
-            <p className="text-xs mt-1" style={{ color: kpi.up ? '#4CAF50' : '#F44336' }}>{kpi.change}</p>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="mb-6">
-        <div className="rounded-xl p-5 border" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center justify-between mb-4">
+        <div className="rounded-xl p-5 border border-border bg-card shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <div>
-              <h3 className="font-semibold" style={{ color: '#04304B', fontSize: 15 }}>Transaction Volume</h3>
-              <p style={{ color: '#9CA3AF', fontSize: 12 }}>Last 7 days (from recent transactions)</p>
+              <h3 className="font-semibold text-foreground">Transaction Volume</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Last 7 days (from recent transactions)</p>
             </div>
-            <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ background: '#E8F8F5', color: '#37BBA2' }}>Weekly</span>
+            <span className="text-xs px-3 py-1 rounded-full font-medium bg-primary-muted text-primary w-fit">Weekly</span>
           </div>
           {loading ? (
-            <div className="h-48 flex items-center justify-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading chart...</div>
+            <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">Loading chart...</div>
           ) : (
-            <ChartContainer config={{ txns: { color: '#37BBA2' }, fees: { color: '#FF6B35' } }} className="h-48">
+            <ChartContainer config={{ txns: { color: 'var(--primary)' }, fees: { color: 'var(--chart-2)' } }} className="h-48">
               <AreaChart data={chartData.length ? chartData : [{ day: '—', txns: 0, fees: 0 }]}>
                 <defs>
                   <linearGradient id="txnGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#37BBA2" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#37BBA2" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-                <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="day" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Area type="monotone" dataKey="txns" stroke="#37BBA2" strokeWidth={2} fill="url(#txnGrad)" name="Transactions" />
+                <Area type="monotone" dataKey="txns" stroke="var(--primary)" strokeWidth={2} fill="url(#txnGrad)" name="Transactions" />
               </AreaChart>
             </ChartContainer>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: '#E5E7EB' }}>
-            <h3 className="font-semibold" style={{ color: '#04304B', fontSize: 15 }}>Recent Transactions</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="rounded-xl border border-border bg-card shadow-sm">
+          <div className="flex items-center justify-between p-5 border-b border-border">
+            <h3 className="font-semibold text-foreground">Recent Transactions</h3>
             <Link to="/admin/transactions/register">
-              <button className="flex items-center gap-1 text-xs font-medium cursor-pointer" style={{ color: '#37BBA2' }}>
+              <button className="flex items-center gap-1 text-xs font-medium text-primary hover:underline cursor-pointer">
                 View all <ExternalLink size={11} />
               </button>
             </Link>
           </div>
-          <div className="divide-y" style={{ borderColor: '#F3F4F6' }}>
+          <div className="divide-y divide-border">
             {loading ? (
-              <div className="px-5 py-6 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</div>
+              <div className="px-5 py-6 text-center text-muted-foreground text-sm">Loading...</div>
             ) : recentTxns.length === 0 ? (
-              <div className="px-5 py-6 text-center" style={{ color: '#6B7280', fontSize: 13 }}>No recent transactions</div>
+              <div className="px-5 py-6 text-center text-muted-foreground text-sm">No recent transactions</div>
             ) : (
               recentTxns.map(txn => (
-                <div key={txn.transactionId} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors">
-                  <div>
-                    <p className="font-medium" style={{ color: '#04304B', fontSize: 13 }}>TXN-{txn.transactionId}</p>
-                    <p style={{ color: '#9CA3AF', fontSize: 11 }}>WLT-{txn.srcWalletId} · {txn.operationTypeTag || txn.transactionType} · {formatRelativeTime(txn.transactionDate)}</p>
+                <div key={txn.transactionId} className="flex items-center justify-between px-5 py-3 hover:bg-muted/50 transition-colors gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-foreground text-sm truncate">TXN-{txn.transactionId}</p>
+                    <p className="text-xs text-muted-foreground truncate">WLT-{txn.srcWalletId} · {txn.operationTypeTag || txn.transactionType} · {formatRelativeTime(txn.transactionDate)}</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold" style={{ color: '#04304B', fontSize: 13 }}>{formatAmount(txn.transactionAmount, txn.currencyCode)}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-semibold text-foreground text-sm">{formatAmount(txn.transactionAmount, txn.currencyCode)}</span>
                     <Components.StatusBadge status={txn.txnStatus} size="sm" />
                   </div>
                 </div>
@@ -303,35 +273,31 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="rounded-xl border" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: '#E5E7EB' }}>
-            <h3 className="font-semibold" style={{ color: '#04304B', fontSize: 15 }}>Recent Audit Actions</h3>
+        <div className="rounded-xl border border-border bg-card shadow-sm">
+          <div className="flex items-center justify-between p-5 border-b border-border">
+            <h3 className="font-semibold text-foreground">Recent Audit Actions</h3>
             <Link to="/admin/transactions/audit-logs">
-              <button className="flex items-center gap-1 text-xs font-medium cursor-pointer" style={{ color: '#37BBA2' }}>
+              <button className="flex items-center gap-1 text-xs font-medium text-primary hover:underline cursor-pointer">
                 View all <ExternalLink size={11} />
               </button>
             </Link>
           </div>
-          <div className="divide-y" style={{ borderColor: '#F3F4F6' }}>
+          <div className="divide-y divide-border">
             {loading ? (
-              <div className="px-5 py-6 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</div>
+              <div className="px-5 py-6 text-center text-muted-foreground text-sm">Loading...</div>
             ) : auditLogs.length === 0 ? (
-              <div className="px-5 py-6 text-center" style={{ color: '#6B7280', fontSize: 13 }}>No recent audit logs</div>
+              <div className="px-5 py-6 text-center text-muted-foreground text-sm">No recent audit logs</div>
             ) : (
               auditLogs.map(log => (
-                <div key={log.id} className="flex items-start gap-3 px-5 py-4 hover:bg-gray-50 transition-colors">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white mt-0.5" style={{ background: '#37BBA2' }}>
+                <div key={log.id} className="flex items-start gap-3 px-5 py-4 hover:bg-muted/50 transition-colors">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-primary-foreground bg-primary">
                     {log.performedBy.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate" style={{ color: '#04304B', fontSize: 13 }}>{log.action}</p>
-                    <p style={{ color: '#9CA3AF', fontSize: 11 }}>{log.performedBy} · {formatRelativeTime(log.dateCreated)}</p>
+                    <p className="font-medium text-foreground text-sm truncate">{log.action}</p>
+                    <p className="text-xs text-muted-foreground">{log.performedBy} · {formatRelativeTime(log.dateCreated)}</p>
                   </div>
-                  <span className="text-xs px-2 py-0.5 rounded font-medium" style={{
-                    background: '#FFF7ED',
-                    color: '#FF9800',
-                    fontSize: 10
-                  }}>
+                  <span className="text-xs px-2 py-0.5 rounded font-medium bg-warning-muted text-warning shrink-0">
                     {log.performedByType}
                   </span>
                 </div>
