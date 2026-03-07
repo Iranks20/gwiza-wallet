@@ -10,6 +10,7 @@ import AdminKYCTiers from './AdminKYCTiers'
 import AdminProfileTypes from './AdminProfileTypes'
 import AdminProfileGroups from './AdminProfileGroups'
 import AdminPermissions from './AdminPermissions'
+import AdminUserAccessLevels from './AdminUserAccessLevels'
 import AdminGroupPermissions from './AdminGroupPermissions'
 import AdminThresholds from './AdminThresholds'
 import AdminTransactionRules from './AdminTransactionRules'
@@ -31,6 +32,7 @@ export default {
   AdminProfileTypes,
   AdminProfileGroups,
   AdminPermissions,
+  AdminUserAccessLevels,
   AdminGroupPermissions,
   AdminThresholds,
   AdminTransactionRules,

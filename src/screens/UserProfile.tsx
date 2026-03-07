@@ -1,25 +1,23 @@
 'use client'
 import React from 'react'
 import { LogOut } from 'lucide-react'
-import { useNavigate } from 'react-router'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function UserProfile() {
-  const navigate = useNavigate()
-
-  const handleLogout = () => {
-    navigate('/auth')
-  }
+  const auth = useAuth()
+  const displayName = auth.user?.full_name ?? 'User'
+  const displayEmail = auth.user?.email_address ?? '—'
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-xs mb-1" style={{ color: '#6B7280' }}>Logged in as</p>
-          <p className="font-semibold" style={{ color: '#04304B', fontSize: 16 }}>Jane Doe</p>
-          <p className="text-xs" style={{ color: '#9CA3AF' }}>+250781234567 · jane@example.com</p>
+          <p className="font-semibold" style={{ color: '#04304B', fontSize: 16 }}>{displayName}</p>
+          <p className="text-xs" style={{ color: '#9CA3AF' }}>{displayEmail}</p>
         </div>
         <button
-          onClick={handleLogout}
+          onClick={() => auth.signOut()}
           className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer"
           style={{ background: '#FEF2F2' }}
         >
@@ -73,7 +71,7 @@ export default function UserProfile() {
           Change password
         </button>
         <button
-          onClick={handleLogout}
+          onClick={() => auth.signOut()}
           className="w-full text-left py-2 text-sm cursor-pointer"
           style={{ color: '#F44336' }}
         >

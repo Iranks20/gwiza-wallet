@@ -111,15 +111,21 @@ export const useraccountsApi = {
   },
 
   async update(
-    user_account_id: number,
-    body: {
-      access_level: number
-      country_id: number
-      user_profile_type: string
-      user_account_status: 'new' | 'active' | 'inactive' | 'suspended'
+    id: number,
+    data: Partial<{ accessLevel: number; status: UserAccount['status'] }>
+  ): Promise<UserAccount | null> {
+    try {
+      const body: Record<string, unknown> = {}
+      if (data.accessLevel !== undefined) body.access_level = data.accessLevel
+      if (data.status !== undefined) body.user_account_status = data.status
+      const res = await apiClient.put<UserAccountDto>(`/useraccounts/id/${id}`, body)
+      const d = res.data
+      if (!d || typeof d !== 'object') return null
+      return dtoToUser(d as UserAccountDto)
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) return null
+      throw e
     }
-  ): Promise<void> {
-    await apiClient.put(`/useraccounts/id/${user_account_id}`, body)
   },
 }
 

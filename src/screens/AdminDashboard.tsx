@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react'
 import Components from '../components'
+import { useAuth } from '@/contexts/AuthContext'
 import { Link } from '@/lib'
 import {
   Wallet, ArrowLeftRight, DollarSign, XCircle, ShieldAlert,
@@ -68,6 +69,8 @@ const KPI_STYLES = {
 } as const
 
 export default function AdminDashboard() {
+  const auth = useAuth()
+  const firstName = auth.user?.full_name?.split(/\s+/)[0] ?? ''
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [walletsTotal, setWalletsTotal] = useState<number | null>(null)
@@ -182,7 +185,9 @@ export default function AdminDashboard() {
     <div className="font-sans">
       <div className="mb-6">
         <h1 className="font-bold text-2xl text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Welcome back — here's what's happening today.</p>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {firstName ? `Welcome back, ${firstName} — ` : 'Welcome back — '}here's what's happening today.
+        </p>
       </div>
 
       {error && (

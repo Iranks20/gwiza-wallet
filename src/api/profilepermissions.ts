@@ -47,6 +47,22 @@ export const profilepermissionsApi = {
     return { items, pagination: res.pagination }
   },
 
+  /** Get profile permissions by scope (GET /profilepermissions/scope/{permission_scope}) */
+  async listByScope(scope: string): Promise<ProfilePermission[]> {
+    const res = await apiClient.get<ProfilePermissionDto[] | { data: ProfilePermissionDto[] }>(
+      `/profilepermissions/scope/${encodeURIComponent(scope)}`
+    )
+    return extractListData(res).map(dtoToPermission)
+  },
+
+  /** Get profile permissions by tag (GET /profilepermissions/tag/{permission_tag}) */
+  async listByTag(tag: string): Promise<ProfilePermission[]> {
+    const res = await apiClient.get<ProfilePermissionDto[] | { data: ProfilePermissionDto[] }>(
+      `/profilepermissions/tag/${encodeURIComponent(tag)}`
+    )
+    return extractListData(res).map(dtoToPermission)
+  },
+
   async getById(id: number): Promise<ProfilePermission | null> {
     try {
       const res = await apiClient.get<ProfilePermissionDto>(`/profilepermissions/${id}`)

@@ -1,11 +1,13 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import {
   LayoutDashboard, Sliders, Users, Wallet, Activity,
   ChevronDown, ChevronRight, Bell, Search, LogOut, ChevronLeft, Menu
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useAuth, getUserInitials } from '@/contexts/AuthContext'
+import { getCountryById } from '@/services/countriesService'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -15,17 +17,19 @@ interface NavItem {
   children?: { label: string; to: string }[]
 }
 
-const navItems: NavItem[] = [
+const baseSettingsChildren = [
+  { label: 'Currencies', to: '/admin/settings/currencies' },
+  { label: 'Transaction Operation Types', to: '/admin/settings/transaction-operation-types' },
+  { label: 'Profile Permissions', to: '/admin/settings/profile-permissions' },
+  { label: 'User Access Levels', to: '/admin/settings/user-access-levels' },
+]
+
+const baseNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <LayoutDashboard size={18} />, to: '/admin/dashboard' },
   {
     label: 'Settings',
     icon: <Sliders size={18} />,
-    children: [
-      { label: 'Countries', to: '/admin/settings/countries' },
-      { label: 'Currencies', to: '/admin/settings/currencies' },
-      { label: 'Transaction Operation Types', to: '/admin/settings/transaction-operation-types' },
-      { label: 'Profile Permissions', to: '/admin/settings/profile-permissions' },
-    ],
+    children: [{ label: 'Countries', to: '/admin/settings/countries' }, ...baseSettingsChildren],
   },
   { label: 'User Management', icon: <Users size={18} />, to: '/admin/user-accounts' },
   { label: 'Wallets', icon: <Wallet size={18} />, to: '/admin/wallets' },
@@ -43,6 +47,11 @@ const navItems: NavItem[] = [
 export default function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
+  const auth = useAuth()
+  const user = auth.user
+  const displayName = user?.full_name ?? 'Admin User'
+  const displayEmail = user?.email_address ?? 'admin@fintech.io'
+  const initials = getUserInitials(user?.full_name) || 'AD'
   const path = location.pathname
   const isMobile = useIsMobile()
   const [collapsed, setCollapsed] = useState(false)
@@ -50,6 +59,38 @@ export default function AdminLayout() {
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [opcoCountryName, setOpcoCountryName] = useState<string | null>(null)
+
+  const profileType = (user?.user_profile_type ?? 'global').toLowerCase()
+  const countryId = user?.country_id
+
+  useEffect(() => {
+    if (profileType === 'opco' && countryId != null && countryId > 0) {
+      getCountryById(countryId).then((c) => setOpcoCountryName(c?.name ?? null)).catch(() => setOpcoCountryName(null))
+    } else {
+      setOpcoCountryName(null)
+    }
+  }, [profileType, countryId])
+
+  const navItems = useMemo((): NavItem[] => {
+    const countryNavItem =
+      profileType === 'opco' && countryId != null && countryId > 0
+        ? {
+            label: opcoCountryName ?? `Country ${countryId}`,
+            to: `/admin/settings/countries/${countryId}/configure`,
+          }
+        : { label: 'Countries', to: '/admin/settings/countries' }
+
+    return baseNavItems.map((item) => {
+      if (item.label === 'Settings') {
+        return {
+          ...item,
+          children: [countryNavItem, ...baseSettingsChildren],
+        }
+      }
+      return item
+    })
+  }, [profileType, countryId, opcoCountryName])
 
   const toggleGroup = (label: string) => {
     setExpandedGroups(prev =>
@@ -183,15 +224,15 @@ export default function AdminLayout() {
         <div className="border-t border-white/10 p-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-primary-foreground text-xs font-bold bg-primary shrink-0">
-              AD
+              {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white text-xs font-semibold truncate">Admin User</p>
-              <p className="text-white/50 text-xs truncate">admin@fintech.io</p>
+              <p className="text-white text-xs font-semibold truncate">{displayName}</p>
+              <p className="text-white/50 text-xs truncate">{displayEmail}</p>
             </div>
             <button
               type="button"
-              onClick={() => { navigate('/auth'); closeSidebar() }}
+              onClick={() => { auth.signOut(); closeSidebar() }}
               className="cursor-pointer p-1 rounded hover:bg-white/10 transition-colors"
               aria-label="Sign out"
             >
@@ -284,9 +325,9 @@ export default function AdminLayout() {
                 className="flex items-center gap-2 px-2 lg:px-3 py-1.5 rounded-lg hover:bg-muted cursor-pointer transition-colors min-h-[44px] lg:min-h-0"
               >
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-primary-foreground text-xs font-bold bg-primary shrink-0">
-                  AD
+                  {initials}
                 </div>
-                <span className="text-sm font-medium text-foreground hidden sm:inline">Admin</span>
+                <span className="text-sm font-medium text-foreground hidden sm:inline truncate max-w-[120px]">{displayName}</span>
                 <ChevronDown size={14} className="text-muted-foreground hidden sm:inline" />
               </button>
               {profileOpen && (
@@ -294,7 +335,7 @@ export default function AdminLayout() {
                   {['My Profile', 'Settings', 'Sign Out'].map((item, i) => (
                     <button
                       key={i}
-                      onClick={() => { if (item === 'Sign Out') navigate('/auth'); setProfileOpen(false) }}
+                      onClick={() => { if (item === 'Sign Out') auth.signOut(); setProfileOpen(false) }}
                       className="w-full text-left px-4 py-3 text-sm hover:bg-muted/50 cursor-pointer transition-colors text-foreground first:rounded-t-xl last:rounded-b-xl"
                     >
                       {item}

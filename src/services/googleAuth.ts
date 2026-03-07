@@ -1,14 +1,18 @@
 import { GOOGLE_AUTH_CONFIG } from '@/config/environment'
 import { API_CONFIG } from '@/config/environment'
 
+export type UserProfileType = 'opco' | 'global'
+
 export type GoogleBackendAuthPayload = {
   user: {
-    user_account_id: string
+    user_account_id: string | number
     email_address: string
     full_name: string
     user_account_status: string
     access_level: number
     mfa_enabled: boolean
+    country_id?: number
+    user_profile_type?: UserProfileType
   }
   access_token: string
   token_type: string
@@ -64,6 +68,14 @@ function parseVerifyResponse(data: unknown): GoogleAuthResult {
   const payload = envelope?.data && envelope.success ? envelope.data : (data as GoogleBackendAuthPayload)
   if (!payload || typeof payload !== 'object' || !payload.user || !payload.access_token) {
     throw new Error('Invalid response from auth server')
+  }
+  const status = String(payload.user.user_account_status || '').toLowerCase()
+  if (status !== 'active') {
+    const msg =
+      status === 'new'
+        ? 'Your account is pending activation. Please contact support.'
+        : 'Your account is not active. Please contact support.'
+    throw new Error(msg)
   }
   return {
     user: payload.user,

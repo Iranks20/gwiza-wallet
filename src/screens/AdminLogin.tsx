@@ -27,8 +27,7 @@ export default function AdminLogin() {
   }
 
   const handleGoogleError = (err: Error) => {
-    console.error('Admin Google login error', err)
-    setGoogleError('Google sign-in failed. Please try again.')
+    setGoogleError(err.message || 'Google sign-in failed. Please try again.')
   }
 
   return (

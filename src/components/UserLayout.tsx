@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Outlet, useLocation, Link as RouterLink } from 'react-router'
 import { Wallet, ListChecks, User, LayoutGrid, Receipt, Menu } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
 const items = [
@@ -17,6 +18,9 @@ export default function UserLayout() {
   const location = useLocation()
   const isMobile = useIsMobile()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const auth = useAuth()
+  const displayName = auth.user?.full_name ?? 'User'
+  const displayEmail = auth.user?.email_address ?? '—'
 
   return (
     <div className="flex h-screen overflow-hidden bg-background font-sans">
@@ -71,9 +75,9 @@ export default function UserLayout() {
           )}
           <div className="flex flex-col min-w-0 flex-1">
             <span className="text-xs text-muted-foreground">Logged in as</span>
-            <span className="text-sm font-semibold text-foreground truncate">Jane Doe</span>
+            <span className="text-sm font-semibold text-foreground truncate">{displayName}</span>
           </div>
-          <span className="text-xs text-muted-foreground shrink-0">+250781234567</span>
+          <span className="text-xs text-muted-foreground shrink-0 truncate max-w-[140px]">{displayEmail}</span>
         </header>
 
         <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background">

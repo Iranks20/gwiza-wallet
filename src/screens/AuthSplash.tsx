@@ -145,7 +145,10 @@ export default function AuthSplash() {
             <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Or continue with</span>
             <div className="flex-1 h-px bg-border" />
           </div>
-          <GoogleSignInButton loginType={isAdmin ? 'admin' : 'user'} onError={err => { console.error('Auth splash Google login error', err); setGoogleError('Google sign-in failed. Please try again.') }} />
+          <GoogleSignInButton
+            loginType={isAdmin ? 'admin' : 'user'}
+            onError={err => setGoogleError(err instanceof Error ? err.message : 'Google sign-in failed. Please try again.')}
+          />
         </div>
       </div>
     </div>

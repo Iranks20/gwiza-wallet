@@ -27,8 +27,7 @@ export default function UserLogin() {
   }
 
   const handleGoogleError = (err: Error) => {
-    console.error('User Google login error', err)
-    setGoogleError('Google sign-in failed. Please try again.')
+    setGoogleError(err.message || 'Google sign-in failed. Please try again.')
   }
 
   return (

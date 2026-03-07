@@ -1,4 +1,15 @@
+import { getStoredAuth } from '@/services/googleAuth'
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://gwiza-wallet.up.railway.app/'
+
+function getAuthHeaders(): Record<string, string> {
+  const auth = getStoredAuth()
+  const headers: Record<string, string> = { Accept: 'application/json' }
+  if (auth?.access_token) {
+    headers.Authorization = `${auth.token_type ?? 'Bearer'} ${auth.access_token}`
+  }
+  return headers
+}
 
 export type ApiResponse<T = unknown> = {
   success: boolean
@@ -76,24 +87,28 @@ export const apiClient = {
   ): Promise<ApiResponse<T>> {
     const res = await fetch(buildUrl(path, params), {
       method: 'GET',
-      headers: { Accept: 'application/json' },
+      headers: getAuthHeaders(),
     })
     return parseResponse<T>(res)
   },
 
   async post<T = unknown>(path: string, body: unknown): Promise<ApiResponse<T>> {
+    const headers = getAuthHeaders()
+    headers['Content-Type'] = 'application/json'
     const res = await fetch(buildUrl(path), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers,
       body: JSON.stringify(body),
     })
     return parseResponse<T>(res)
   },
 
   async put<T = unknown>(path: string, body: unknown): Promise<ApiResponse<T>> {
+    const headers = getAuthHeaders()
+    headers['Content-Type'] = 'application/json'
     const res = await fetch(buildUrl(path), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers,
       body: JSON.stringify(body),
     })
     return parseResponse<T>(res)
@@ -102,7 +117,7 @@ export const apiClient = {
   async delete(path: string): Promise<ApiResponse<unknown>> {
     const res = await fetch(buildUrl(path), {
       method: 'DELETE',
-      headers: { Accept: 'application/json' },
+      headers: getAuthHeaders(),
     })
     return parseResponse(res)
   },

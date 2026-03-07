@@ -1,17 +1,11 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react'
 import Components from '../components'
-import { Search, Pencil } from 'lucide-react'
-import { listUserAccounts, updateUserAccount, type UpdateUserAccountBody } from '@/services/userAccountsService'
+import { Search, Edit2, X } from 'lucide-react'
+import { listUserAccounts, updateUserAccount } from '@/services/userAccountsService'
 import type { UserAccount } from '@/services/userAccountsService'
+import { useraccesslevelsApi, type UserAccessLevel } from '@/api/useraccesslevels'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 
 function formatDateTime(s: string | null): string {
@@ -28,6 +22,118 @@ function formatDateTime(s: string | null): string {
 const inputClass = "w-full px-3 py-2 border border-input rounded-lg text-sm text-foreground bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
 const selectClass = "w-full px-3 py-2 border border-input rounded-lg text-sm text-foreground bg-background cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
 
+interface EditUserDrawerProps {
+  open: boolean
+  onClose: () => void
+  user: UserAccount | null
+  accessLevels: UserAccessLevel[]
+  onSave: (id: number, data: { accessLevel: number; status: UserAccount['status'] }) => Promise<void>
+}
+
+function EditUserDrawer({ open, onClose, user, accessLevels, onSave }: EditUserDrawerProps) {
+  const [accessLevel, setAccessLevel] = useState<number>(1)
+  const [status, setStatus] = useState<UserAccount['status']>('active')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (open && user) {
+      setAccessLevel(user.accessLevel)
+      setStatus(user.status)
+    }
+  }, [open, user])
+
+  if (!open || !user) return null
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await onSave(user.id, { accessLevel, status })
+      onClose()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <div className="flex-1 bg-black/40" onClick={onClose} />
+      <div className="w-96 bg-white h-full shadow-2xl flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }}>
+        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
+          <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>
+            Edit User Account
+          </h2>
+          <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-auto p-6 space-y-4">
+          <div>
+            <p className="text-xs mb-1" style={{ color: '#6B7280' }}>User</p>
+            <p className="font-medium" style={{ color: '#04304B', fontSize: 14 }}>
+              {user.fullName || user.userName}
+            </p>
+            <p className="text-sm" style={{ color: '#6B7280' }}>{user.email}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>
+              Access Level
+            </label>
+            <select
+              value={accessLevel}
+              onChange={(e) => setAccessLevel(Number(e.target.value))}
+              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer"
+              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
+            >
+              {accessLevels.length === 0 ? (
+                <option value={user.accessLevel}>Level {user.accessLevel}</option>
+              ) : (
+                accessLevels.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>
+              Status
+            </label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as UserAccount['status'])}
+              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer"
+              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
+            >
+              <option value="new">New</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+        </div>
+        <div className="p-6 border-t flex gap-3" style={{ borderColor: '#E5E7EB' }}>
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg border font-medium cursor-pointer hover:bg-gray-50 transition-colors"
+            style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 14 }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 py-2.5 rounded-lg font-medium text-white cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: '#37BBA2', fontSize: 14 }}
+          >
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminUserAccounts() {
   const [items, setItems] = useState<UserAccount[]>([])
   const [loading, setLoading] = useState(false)
@@ -36,31 +142,27 @@ export default function AdminUserAccounts() {
   const [pagination, setPagination] = useState<{ page: number; limit: number; total: number; totalPages: number } | null>(null)
 
   const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'active' | 'inactive' | 'suspended'>('all')
-  const [userIdFilter, setUserIdFilter] = useState('')
-  const [emailFilter, setEmailFilter] = useState('')
   const [search, setSearch] = useState('')
-
-  const [editingUser, setEditingUser] = useState<UserAccount | null>(null)
-  const [editForm, setEditForm] = useState<UpdateUserAccountBody>({
-    access_level: 1,
-    country_id: 0,
-    user_profile_type: '',
-    user_account_status: 'active',
-  })
-  const [editSubmitting, setEditSubmitting] = useState(false)
-  const [editError, setEditError] = useState<string | null>(null)
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false)
+  const [editUser, setEditUser] = useState<UserAccount | null>(null)
+  const [accessLevels, setAccessLevels] = useState<UserAccessLevel[]>([])
 
   const listParams = useMemo(() => {
-    const userId = userIdFilter.trim() ? parseInt(userIdFilter.trim(), 10) : undefined
-    const email = emailFilter.trim() || undefined
+    const q = search.trim()
+    const userId = /^\d+$/.test(q) ? parseInt(q, 10) : undefined
+    const email = q.includes('@') ? q : undefined
     return {
       page,
       limit: 20,
       status: statusFilter,
-      userId: userId && !Number.isNaN(userId) ? userId : undefined,
-      email,
+      userId: userId && userId > 0 ? userId : undefined,
+      email: email && !userId ? email : undefined,
     }
-  }, [page, statusFilter, userIdFilter, emailFilter])
+  }, [page, statusFilter, search])
+
+  useEffect(() => {
+    useraccesslevelsApi.list({ page: 1, limit: 100 }).then((r) => setAccessLevels(r.items)).catch(() => setAccessLevels([]))
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -85,61 +187,32 @@ export default function AdminUserAccounts() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     if (!q) return items
+    if (/^\d+$/.test(q) || q.includes('@')) return items
     return items.filter(u =>
-      String(u.id).includes(q) ||
       u.userName.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
-      u.fullName.toLowerCase().includes(q)
+      (u.fullName && u.fullName.toLowerCase().includes(q))
     )
   }, [items, search])
 
   const resetFilters = () => {
     setStatusFilter('all')
-    setUserIdFilter('')
-    setEmailFilter('')
     setSearch('')
     setPage(1)
   }
 
-  const openEdit = (u: UserAccount) => {
-    setEditingUser(u)
-    setEditForm({
-      access_level: u.accessLevel,
-      country_id: 0,
-      user_profile_type: '',
-      user_account_status: u.status,
-    })
-    setEditError(null)
-  }
-
-  const closeEdit = () => {
-    setEditingUser(null)
-    setEditError(null)
-  }
-
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingUser) return
-    setEditSubmitting(true)
-    setEditError(null)
+  const handleUpdateUser = async (id: number, data: { accessLevel: number; status: UserAccount['status'] }) => {
+    setError(null)
     try {
-      await updateUserAccount(editingUser.id, editForm)
-      setItems(prev =>
-        prev.map(it =>
-          it.id === editingUser.id
-            ? {
-                ...it,
-                accessLevel: editForm.access_level,
-                status: editForm.user_account_status,
-              }
-            : it
-        )
-      )
-      closeEdit()
-    } catch (err) {
-      setEditError(err instanceof Error ? err.message : 'Update failed')
-    } finally {
-      setEditSubmitting(false)
+      await updateUserAccount(id, data)
+      const res = await listUserAccounts(listParams)
+      setItems(res.items)
+      setPagination(res.pagination ?? null)
+      setEditDrawerOpen(false)
+      setEditUser(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Update failed')
+      throw e
     }
   }
 
@@ -147,7 +220,7 @@ export default function AdminUserAccounts() {
     <div className="font-sans">
       <Components.AdminPageHeader
         title="User Management"
-        subtitle="View and filter backoffice user accounts"
+        subtitle="View, filter, and update backoffice user accounts"
       />
 
       {error && (
@@ -163,7 +236,7 @@ export default function AdminUserAccounts() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search by ID, name, email…"
+            placeholder="Search by ID, email, or name…"
             className={cn(inputClass, 'pl-9')}
           />
         </div>
@@ -180,14 +253,6 @@ export default function AdminUserAccounts() {
             <option value="inactive">Inactive</option>
             <option value="suspended">Suspended</option>
           </select>
-        </div>
-        <div className="w-full sm:w-32">
-          <label className="block text-xs font-medium mb-1 text-muted-foreground">User ID</label>
-          <input type="text" value={userIdFilter} onChange={e => setUserIdFilter(e.target.value)} placeholder="e.g. 1" className={inputClass} onBlur={() => setPage(1)} />
-        </div>
-        <div className="w-full sm:w-56">
-          <label className="block text-xs font-medium mb-1 text-muted-foreground">Email</label>
-          <input type="email" value={emailFilter} onChange={e => setEmailFilter(e.target.value)} placeholder="user@example.com" className={inputClass} onBlur={() => setPage(1)} />
         </div>
         <Button variant="outline" onClick={resetFilters} className="shrink-0">
           Reset filters
@@ -219,23 +284,31 @@ export default function AdminUserAccounts() {
                   <td colSpan={8} className="px-5 py-8 text-center text-muted-foreground text-sm">No users found for the selected filters.</td>
                 </tr>
               ) : (
-                filtered.map(u => (
-                  <tr key={u.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                    <td className="px-4 py-3"><span className="font-mono font-semibold text-primary text-xs">{u.id}</span></td>
-                    <td className="px-4 py-3"><span className="text-foreground text-sm">{u.fullName || u.userName}</span></td>
-                    <td className="px-4 py-3"><span className="text-foreground text-sm">{u.email}</span></td>
-                    <td className="px-4 py-3"><span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-info-muted text-info">{u.authType}</span></td>
-                    <td className="px-4 py-3"><span className="text-foreground text-sm">{u.accessLevel}</span></td>
-                    <td className="px-4 py-3"><Components.StatusBadge status={u.status} size="sm" /></td>
-                    <td className="px-4 py-3"><span className="text-muted-foreground text-xs">{formatDateTime(u.lastLoginAt)}</span></td>
-                    <td className="px-4 py-3">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(u)} className="text-muted-foreground hover:text-foreground" aria-label="Edit user">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
+                filtered.map(u => {
+                  const accessLevelName = accessLevels.find((l) => l.id === u.accessLevel)?.name ?? String(u.accessLevel)
+                  return (
+                    <tr key={u.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                      <td className="px-4 py-3"><span className="font-mono font-semibold text-primary text-xs">{u.id}</span></td>
+                      <td className="px-4 py-3"><span className="text-foreground text-sm">{u.fullName || u.userName}</span></td>
+                      <td className="px-4 py-3"><span className="text-foreground text-sm">{u.email}</span></td>
+                      <td className="px-4 py-3"><span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-info-muted text-info">{u.authType}</span></td>
+                      <td className="px-4 py-3"><span className="text-foreground text-sm">{accessLevelName}</span></td>
+                      <td className="px-4 py-3"><Components.StatusBadge status={u.status} size="sm" /></td>
+                      <td className="px-4 py-3"><span className="text-muted-foreground text-xs">{formatDateTime(u.lastLoginAt)}</span></td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => { setEditUser(u); setEditDrawerOpen(true) }}
+                          className="p-1.5 rounded-lg hover:bg-primary-muted cursor-pointer text-primary"
+                          title="Edit user"
+                          aria-label="Edit user"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+              })
+            )}
             </tbody>
           </table>
         </div>
@@ -262,78 +335,13 @@ export default function AdminUserAccounts() {
         )}
       </div>
 
-      <Dialog open={!!editingUser} onOpenChange={open => !open && closeEdit()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit user account</DialogTitle>
-            {editingUser && (
-              <p className="text-sm text-muted-foreground">
-                {editingUser.fullName || editingUser.userName} · {editingUser.email}
-              </p>
-            )}
-          </DialogHeader>
-          <form onSubmit={handleEditSubmit} className="space-y-4">
-            {editError && (
-              <div className="px-3 py-2 rounded-lg border border-error/30 bg-error-muted text-error text-sm">
-                {editError}
-              </div>
-            )}
-            <div>
-              <label className="block text-xs font-medium mb-1 text-muted-foreground">Access level</label>
-              <input
-                type="number"
-                min={0}
-                value={editForm.access_level}
-                onChange={e => setEditForm(f => ({ ...f, access_level: parseInt(e.target.value, 10) || 0 }))}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-1 text-muted-foreground">Country ID</label>
-              <input
-                type="number"
-                min={0}
-                value={editForm.country_id}
-                onChange={e => setEditForm(f => ({ ...f, country_id: parseInt(e.target.value, 10) || 0 }))}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-1 text-muted-foreground">User profile type</label>
-              <input
-                type="text"
-                value={editForm.user_profile_type}
-                onChange={e => setEditForm(f => ({ ...f, user_profile_type: e.target.value }))}
-                className={inputClass}
-                placeholder="e.g. admin, user"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-1 text-muted-foreground">Status</label>
-              <select
-                value={editForm.user_account_status}
-                onChange={e =>
-                  setEditForm(f => ({ ...f, user_account_status: e.target.value as UpdateUserAccountBody['user_account_status'] }))
-                }
-                className={selectClass}
-              >
-                <option value="new">New</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
-              </select>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeEdit} disabled={editSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={editSubmitting}>
-                {editSubmitting ? 'Saving…' : 'Save changes'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <EditUserDrawer
+        open={editDrawerOpen}
+        onClose={() => { setEditDrawerOpen(false); setEditUser(null) }}
+        user={editUser}
+        accessLevels={accessLevels}
+        onSave={handleUpdateUser}
+      />
     </div>
   )
 }

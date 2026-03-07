@@ -2,10 +2,8 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { GoogleLogin } from '@react-oauth/google'
 import { FEATURE_FLAGS, GOOGLE_CONFIG } from '@/config/environment'
-import {
-  verifyIdTokenWithBackend,
-  setAuthFromResult,
-} from '@/services/googleAuth'
+import { verifyIdTokenWithBackend } from '@/services/googleAuth'
+import { useAuth } from '@/contexts/AuthContext'
 
 type Props = {
   loginType?: 'admin' | 'user'
@@ -23,6 +21,7 @@ export default function GoogleSignInButton({
   disabled,
 }: Props) {
   const navigate = useNavigate()
+  const auth = useAuth()
   const [loading, setLoading] = useState(false)
 
   if (!FEATURE_FLAGS.ENABLE_GOOGLE_AUTH || !GOOGLE_CONFIG.CLIENT_ID) {
@@ -31,7 +30,6 @@ export default function GoogleSignInButton({
 
   const handleSuccess = async (credentialResponse: { credential?: string }) => {
     const idToken = credentialResponse.credential
-    console.log('google credentials', credentialResponse)
     if (!idToken) {
       onError?.(new Error('No credential returned from Google'))
       return
@@ -39,7 +37,7 @@ export default function GoogleSignInButton({
     setLoading(true)
     try {
       const result = await verifyIdTokenWithBackend(idToken)
-      setAuthFromResult(result)
+      auth.setAuth(result)
       onSuccess?.()
       const target = loginType === 'admin' ? '/admin/dashboard' : '/user/overview'
       navigate(target, { replace: true })

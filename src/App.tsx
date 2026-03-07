@@ -10,10 +10,11 @@ import ResetPassword from './screens/ResetPassword'
 import OtpVerification from './screens/OtpVerification'
 
 import AdminDashboard from './screens/AdminDashboard'
-import AdminCountries from './screens/AdminCountries'
+import AdminCountriesGuard from './screens/AdminCountriesGuard'
 import AdminCurrencies from './screens/AdminCurrencies'
 import AdminOperationTypes from './screens/AdminOperationTypes'
 import AdminPermissions from './screens/AdminPermissions'
+import AdminUserAccessLevels from './screens/AdminUserAccessLevels'
 import AdminWallets from './screens/AdminWallets'
 import AdminWalletDetails from './screens/AdminWalletDetails'
 import AdminTransactionRegister from './screens/AdminTransactionRegister'
@@ -73,7 +74,7 @@ export default function App() {
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
 
-        <Route path="settings/countries" element={<AdminCountries />} />
+        <Route path="settings/countries" element={<AdminCountriesGuard />} />
         <Route path="settings/countries/:countryId/configure" element={<CountryConfigure />}>
           <Route index element={<Navigate to="kyc-tiers" replace />} />
           <Route path="kyc-tiers" element={<ConfigureKYCTiers />} />
@@ -95,6 +96,7 @@ export default function App() {
         <Route path="settings/currencies" element={<AdminCurrencies />} />
         <Route path="settings/transaction-operation-types" element={<AdminOperationTypes />} />
         <Route path="settings/profile-permissions" element={<AdminPermissions />} />
+        <Route path="settings/user-access-levels" element={<AdminUserAccessLevels />} />
 
         <Route path="user-accounts" element={<AdminUserAccounts />} />
 

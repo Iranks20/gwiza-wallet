@@ -4,11 +4,22 @@ import type { ProfilePermission } from '@/api/profilepermissions'
 export type PermissionCatalogItem = ProfilePermission
 
 export async function listPermissionsCatalog(filters?: { scope?: string; tag?: string; status?: string }): Promise<PermissionCatalogItem[]> {
-  const { items } = await profilepermissionsApi.list({ limit: 500 })
+  let items: PermissionCatalogItem[]
+
+  if (filters?.scope && filters.scope !== 'all') {
+    items = await profilepermissionsApi.listByScope(filters.scope)
+  } else if (filters?.tag && filters.tag !== 'all') {
+    items = await profilepermissionsApi.listByTag(filters.tag)
+  } else {
+    const res = await profilepermissionsApi.list({ limit: 500 })
+    items = res.items
+  }
+
   let out = items
-  if (filters?.scope && filters.scope !== 'all') out = out.filter((p) => p.scope === filters.scope)
-  if (filters?.tag && filters.tag !== 'all') out = out.filter((p) => p.tag === filters.tag)
-  if (filters?.status && filters.status !== 'all') out = out.filter((p) => p.status === filters.status)
+  if (filters?.scope && filters.scope !== 'all' && filters?.tag && filters.tag !== 'all') {
+    out = out.filter((p) => p.tag === filters!.tag)
+  }
+  if (filters?.status && filters.status !== 'all') out = out.filter((p) => p.status === filters!.status)
   return out
 }
 
