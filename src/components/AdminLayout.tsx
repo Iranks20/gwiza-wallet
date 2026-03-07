@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
       { label: 'Profile Permissions', to: '/admin/settings/profile-permissions' },
     ],
   },
+  { label: 'User Management', icon: <Users size={18} />, to: '/admin/user-accounts' },
   { label: 'Wallets', icon: <Wallet size={18} />, to: '/admin/wallets' },
   {
     label: 'Transactions',

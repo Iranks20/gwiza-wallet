@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Link } from '@/lib'
 import { Wallet, Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router'
+import GoogleSignInButton from '@/components/GoogleSignInButton'
 
 const DEMO_ADMIN_EMAIL = 'admin@fintech.io'
 const DEMO_ADMIN_PASSWORD = 'Admin123!'
@@ -20,12 +21,14 @@ export default function AuthSplash() {
   const [userId, setUserId] = useState(DEMO_USER_IDENTIFIER)
   const [userPassword, setUserPassword] = useState(DEMO_USER_PASSWORD)
   const [error, setError] = useState<string | null>(null)
+  const [googleError, setGoogleError] = useState<string | null>(null)
 
   const isAdmin = tab === 'admin'
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setGoogleError(null)
 
     if (isAdmin) {
       if (adminEmail === DEMO_ADMIN_EMAIL && adminPassword === DEMO_ADMIN_PASSWORD) {
@@ -116,7 +119,7 @@ export default function AuthSplash() {
         </p>
 
         {/* Error */}
-        {error && (
+        {(error || googleError) && (
           <div
             className="mb-3 text-xs px-3 py-2 rounded-lg"
             style={{
@@ -125,7 +128,7 @@ export default function AuthSplash() {
               border: '1px solid #FCA5A5',
             }}
           >
-            {error}
+            {error || googleError}
           </div>
         )}
 
@@ -250,6 +253,25 @@ export default function AuthSplash() {
             {isAdmin ? 'Login as admin' : 'Login to wallet'}
           </button>
         </form>
+
+        {/* Google sign-in */}
+        <div className="mt-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex-1 h-px" style={{ background: '#E5E7EB' }} />
+            <span className="text-[11px] font-medium uppercase tracking-wide" style={{ color: '#9CA3AF' }}>
+              Or continue with
+            </span>
+            <div className="flex-1 h-px" style={{ background: '#E5E7EB' }} />
+          </div>
+          <GoogleSignInButton
+            loginType={isAdmin ? 'admin' : 'user'}
+            onError={err => {
+              // eslint-disable-next-line no-console
+              console.error('Auth splash Google login error', err)
+              setGoogleError('Google sign-in failed. Please try again.')
+            }}
+          />
+        </div>
       </div>
     </div>
   )

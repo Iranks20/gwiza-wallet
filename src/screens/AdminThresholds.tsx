@@ -348,15 +348,15 @@ export default function AdminThresholds({ embedded, countryId: countryIdProp, gr
                 <span style={{ color: '#9CA3AF', fontSize: 13 }}>{thresholds.length} thresholds</span>
               </div>
               <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                <table className="w-full">
-                  <thead>
-                    <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
+          <table className="w-full">
+            <thead>
+              <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
                       {['ID', 'Currency', 'KYC Tier', 'Single min', 'Single max', 'Daily cap', 'Monthly cap', 'Status', 'Date created', 'Actions'].map(h => (
                         <th key={h} className="text-left px-4 py-3" style={{ color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
                     {thresholds.map(r => (
                       <tr key={r.id} className="border-b hover:bg-gray-50" style={{ borderColor: '#F3F4F6' }}>
                         <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 13 }}>{r.id}</span></td>
@@ -368,7 +368,7 @@ export default function AdminThresholds({ embedded, countryId: countryIdProp, gr
                         <td className="px-4 py-3"><span style={{ color: '#04304B', fontSize: 13 }}>{r.monthlyTxnValueCap}</span></td>
                         <td className="px-4 py-3"><Components.StatusBadge status={r.status} size="sm" /></td>
                         <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 13 }}>{r.dateCreated ? new Date(r.dateCreated).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</span></td>
-                        <td className="px-4 py-3">
+                  <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <button onClick={() => { setEditThreshold(r); setDrawerOpen(true) }} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
                             {r.status === 'active' ? (
@@ -377,12 +377,12 @@ export default function AdminThresholds({ embedded, countryId: countryIdProp, gr
                               <button onClick={() => setActivateId(r.id)} className="p-1.5 rounded-lg hover:bg-green-50 cursor-pointer" style={{ color: '#4CAF50' }} title="Activate"><Power size={14} /></button>
                             )}
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
             </>
           )}
           <ThresholdDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} threshold={editThreshold} profileTypeGroupId={hasValidGroup ? groupId : 0} countryId={countryId} kycTierOptions={kycTierOptions} currencyOptions={currencyOptions} onSave={handleSave} />

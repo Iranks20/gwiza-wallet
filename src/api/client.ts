@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://walletplus.qa.gwiza.co'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://gwiza-wallet.up.railway.app/'
 
 export type ApiResponse<T = unknown> = {
   success: boolean

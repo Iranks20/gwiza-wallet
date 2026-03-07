@@ -54,3 +54,52 @@ Legacy query parameter format (`?screen=ScreenName`) is also supported for backw
 - **Vite** - Build tool and dev server
 - **Tailwind CSS** - Styling
 - **ESLint** - Code linting
+
+## Google Login
+
+Google Login is integrated using the backend at `https://gwiza-wallet.up.railway.app` (endpoint `/auth/google`).
+
+### Environment variables
+
+Create a `.env` file at the project root with at least:
+
+```bash
+VITE_API_BASE_URL=https://gwiza-wallet.up.railway.app
+
+# Google OAuth credentials (from Google Cloud Console) — use your own values
+VITE_GOOGLE_CLIENT_ID=<your-google-client-id>.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=<your-google-client-secret>
+
+# Application config
+VITE_APP_NAME=Developer Portal
+VITE_APP_VERSION=1.0.0
+VITE_NODE_ENV=development
+
+# Security / feature flags
+VITE_ENABLE_DEV_TOOLS=true
+VITE_ENABLE_CONSOLE_LOGS=true
+
+# Feature flags
+VITE_ENABLE_GOOGLE_AUTH=true
+VITE_ENABLE_ADMIN_PANEL=true
+VITE_DEBUG_MODE=true
+```
+
+> **Important:** `.env` is already ignored in `.gitignore`. Do **not** commit it.
+
+### Where it is used
+
+- Config module: `src/config/environment.ts`
+  - `API_CONFIG.BASE_URL` comes from `VITE_API_BASE_URL`.
+  - `FEATURE_FLAGS.ENABLE_GOOGLE_AUTH` and other flags are derived from the `VITE_ENABLE_*` variables.
+- Google auth service: `src/services/googleAuth.ts`
+  - Opens a popup window to `API_CONFIG.BASE_URL + '/auth/google'` and waits for a message payload from the backend containing the authenticated user and access token.
+- UI component: `src/components/GoogleSignInButton.tsx`
+  - Reusable “Continue with Google” button.
+  - Disabled/hidden when `FEATURE_FLAGS.ENABLE_GOOGLE_AUTH` is false.
+- Screens:
+  - `src/screens/AdminLogin.tsx`
+  - `src/screens/UserLogin.tsx`
+
+On both login screens, the Google button appears **below** the normal email/password form, under a separator labeled “Or continue with”. On success it navigates to the corresponding dashboard; on error it shows a friendly message on the page and logs details to the console.
+

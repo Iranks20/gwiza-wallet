@@ -4,6 +4,7 @@ import AdminLayout from './components/AdminLayout'
 import AdminLogin from './screens/AdminLogin'
 import UserLogin from './screens/UserLogin'
 import AuthSplash from './screens/AuthSplash'
+import AuthCallback from './screens/AuthCallback'
 import ForgotPassword from './screens/ForgotPassword'
 import ResetPassword from './screens/ResetPassword'
 import OtpVerification from './screens/OtpVerification'
@@ -18,6 +19,7 @@ import AdminWalletDetails from './screens/AdminWalletDetails'
 import AdminTransactionRegister from './screens/AdminTransactionRegister'
 import AdminAuditLogs from './screens/AdminAuditLogs'
 import AdminFeesLedger from './screens/AdminFeesLedger'
+import AdminUserAccounts from './screens/AdminUserAccounts'
 import AdminHealth from './screens/AdminHealth'
 import AdminReady from './screens/AdminReady'
 
@@ -59,6 +61,7 @@ export default function App() {
 
       {/* Auth */}
       <Route path="/auth" element={<AuthSplash />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/user/login" element={<UserLogin />} />
       <Route path="/auth/forgot-password" element={<ForgotPassword />} />
@@ -92,6 +95,8 @@ export default function App() {
         <Route path="settings/currencies" element={<AdminCurrencies />} />
         <Route path="settings/transaction-operation-types" element={<AdminOperationTypes />} />
         <Route path="settings/profile-permissions" element={<AdminPermissions />} />
+
+        <Route path="user-accounts" element={<AdminUserAccounts />} />
 
         <Route path="wallets" element={<AdminWallets />} />
         <Route path="wallets/:walletId" element={<AdminWalletDetails />} />

@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Link } from '@/lib'
 import { Wallet, Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router'
+import GoogleSignInButton from '@/components/GoogleSignInButton'
 
 const DEMO_ADMIN_EMAIL = 'admin@fintech.io'
 const DEMO_ADMIN_PASSWORD = 'Admin123!'
@@ -13,6 +14,7 @@ export default function AdminLogin() {
   const [email, setEmail] = useState(DEMO_ADMIN_EMAIL)
   const [password, setPassword] = useState(DEMO_ADMIN_PASSWORD)
   const [error, setError] = useState<string | null>(null)
+  const [googleError, setGoogleError] = useState<string | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,6 +23,12 @@ export default function AdminLogin() {
     } else {
       setError('Invalid admin credentials. Use admin@fintech.io / Admin123!')
     }
+  }
+
+  const handleGoogleError = (err: Error) => {
+    // eslint-disable-next-line no-console
+    console.error('Admin Google login error', err)
+    setGoogleError('Google sign-in failed. Please try again.')
   }
 
   return (
@@ -38,9 +46,9 @@ export default function AdminLogin() {
           Demo login: <span style={{ color: '#04304B' }}>{DEMO_ADMIN_EMAIL}</span> / <span style={{ color: '#04304B' }}>{DEMO_ADMIN_PASSWORD}</span>
         </div>
 
-        {error && (
+        {(error || googleError) && (
           <div className="mb-3 text-xs px-3 py-2 rounded-lg" style={{ background: '#FEF2F2', color: '#B91C1C', border: '1px solid #FCA5A5' }}>
-            {error}
+            {error || googleError}
           </div>
         )}
 
@@ -94,6 +102,17 @@ export default function AdminLogin() {
             Login
           </button>
         </form>
+
+        <div className="mt-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex-1 h-px" style={{ background: '#E5E7EB' }} />
+            <span className="text-[11px] font-medium uppercase tracking-wide" style={{ color: '#9CA3AF' }}>
+              Or continue with
+            </span>
+            <div className="flex-1 h-px" style={{ background: '#E5E7EB' }} />
+          </div>
+          <GoogleSignInButton loginType="admin" onError={handleGoogleError} />
+        </div>
 
         <p className="mt-4 text-center text-xs" style={{ color: '#9CA3AF' }}>
           Not an admin?{' '}

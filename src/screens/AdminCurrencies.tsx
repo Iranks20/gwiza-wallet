@@ -5,16 +5,20 @@ import { Plus, Edit2, Trash2, X, Search } from 'lucide-react'
 import type { Currency } from '@/services/currenciesService'
 import { listCurrencies, createCurrency, updateCurrency, removeCurrency } from '@/services/currenciesService'
 
+const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/
+
 function CurrencyDrawer({
   currency,
   onClose,
   onSave,
   isEdit,
+  error,
 }: {
   currency?: Currency
   onClose: () => void
   onSave: (c: Pick<Currency, 'code' | 'name'> & Partial<Currency>) => void
   isEdit: boolean
+  error: string | null
 }) {
   const [form, setForm] = useState<Currency>(
     currency || { code: '', name: '', symbol: '', decimals: 2, country: '', status: 'active' }
@@ -28,11 +32,16 @@ function CurrencyDrawer({
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={18} /></button>
         </div>
         <div className="flex-1 overflow-auto p-6 space-y-5">
+          {error && (
+            <div className="px-3 py-2.5 rounded-xl border text-sm" style={{ borderColor: '#FECACA', background: '#FEF2F2', color: '#991B1B' }}>
+              {error}
+            </div>
+          )}
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: '#04304B' }}>Currency Code</label>
             <input
               value={form.code}
-              onChange={e => setForm({ ...form, code: e.target.value })}
+              onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}
               placeholder="e.g. KES"
               readOnly={isEdit}
               className="w-full px-3 py-2.5 border rounded-xl outline-none text-sm transition-all"
@@ -72,6 +81,7 @@ export default function AdminCurrencies() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [drawer, setDrawer] = useState<{ open: boolean; item?: Currency }>({ open: false })
+  const [drawerError, setDrawerError] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   const loadCurrencies = () => {
@@ -90,17 +100,28 @@ export default function AdminCurrencies() {
   })
 
   const handleSave = async (c: { code: string; name: string }) => {
-    setError(null)
+    setDrawerError(null)
+    const code = c.code.trim().toUpperCase()
+    const name = c.name.trim()
+    if (!code || !name) {
+      setDrawerError('Currency code and name are required.')
+      return
+    }
+    if (!CURRENCY_CODE_PATTERN.test(code)) {
+      setDrawerError('Currency code must be exactly 3 uppercase letters (e.g. RWF).')
+      return
+    }
     try {
       if (drawer.item) {
-        await updateCurrency(drawer.item.code, { name: c.name })
+        await updateCurrency(drawer.item.code, { name })
       } else {
-        await createCurrency({ code: c.code, name: c.name, status: 'active' })
+        await createCurrency({ code, name, status: 'active' })
       }
       loadCurrencies()
       setDrawer({ open: false })
+      setDrawerError(null)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed')
+      setDrawerError(e instanceof Error ? e.message : 'Save failed')
     }
   }
 
@@ -180,8 +201,9 @@ export default function AdminCurrencies() {
         <CurrencyDrawer
           currency={drawer.item}
           isEdit={!!drawer.item}
-          onClose={() => setDrawer({ open: false })}
+          onClose={() => { setDrawer({ open: false }); setDrawerError(null) }}
           onSave={handleSave}
+          error={drawerError}
         />
       )}
 
