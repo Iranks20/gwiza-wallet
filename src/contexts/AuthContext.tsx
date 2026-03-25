@@ -6,16 +6,27 @@ import {
   getStoredAuth,
   setAuthFromResult,
   clearStoredAuth,
+  updateStoredUser,
   type GoogleAuthResult,
 } from '@/services/googleAuth'
 
 export type AuthUser = GoogleAuthResult['user']
 
+export type Pending2FAData = {
+  mfaChallengeToken: string
+  user: AuthUser
+  loginType: 'admin' | 'user'
+}
+
 type AuthContextValue = {
   user: AuthUser | null
   accessToken: string | null
   isAuthenticated: boolean
+  pending2FA: Pending2FAData | null
   setAuth: (result: GoogleAuthResult) => void
+  setPending2FAData: (data: Pending2FAData | null) => void
+  complete2FALogin: (result: GoogleAuthResult) => void
+  setUserMfaEnabled: (enabled: boolean) => void
   signOut: () => void
   refresh: () => void
 }
@@ -47,6 +58,7 @@ export function getUserInitials(fullName: string | undefined): string {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
   const [auth, setAuthState] = useState<GoogleAuthResult | null>(() => getStoredAuth())
+  const [pending2FA, setPending2FA] = useState<Pending2FAData | null>(null)
 
   const refresh = useCallback(() => {
     setAuthState(getStoredAuth())
@@ -57,9 +69,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthState(result)
   }, [])
 
+  const setPending2FAData = useCallback((data: Pending2FAData | null) => {
+    setPending2FA(data)
+  }, [])
+
+  const complete2FALogin = useCallback((result: GoogleAuthResult) => {
+    setAuthFromResult(result)
+    setAuthState(result)
+    setPending2FA(null)
+  }, [])
+
+  const setUserMfaEnabled = useCallback((enabled: boolean) => {
+    updateStoredUser({ mfa_enabled: enabled })
+    setAuthState((prev) =>
+      prev?.user ? { ...prev, user: { ...prev.user, mfa_enabled: enabled } } : prev
+    )
+  }, [])
+
   const signOut = useCallback(() => {
     clearStoredAuth()
     setAuthState(null)
+    setPending2FA(null)
     navigate('/auth', { replace: true })
   }, [navigate])
 
@@ -68,11 +98,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: auth?.user ?? null,
       accessToken: auth?.access_token ?? null,
       isAuthenticated: Boolean(auth?.user && auth?.access_token),
+      pending2FA,
       setAuth,
+      setPending2FAData,
+      complete2FALogin,
+      setUserMfaEnabled,
       signOut,
       refresh,
     }),
-    [auth, setAuth, signOut, refresh]
+    [auth, pending2FA, setAuth, setPending2FAData, complete2FALogin, setUserMfaEnabled, signOut, refresh]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

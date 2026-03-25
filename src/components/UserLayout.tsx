@@ -4,6 +4,7 @@ import { Outlet, useLocation, Link as RouterLink } from 'react-router'
 import { Wallet, ListChecks, User, LayoutGrid, Receipt, Menu } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useAuth } from '@/contexts/AuthContext'
+import TwoFactorRequirementBanner from '@/components/TwoFactorRequirementBanner'
 import { cn } from '@/lib/utils'
 
 const items = [
@@ -81,6 +82,7 @@ export default function UserLayout() {
         </header>
 
         <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background">
+          <TwoFactorRequirementBanner profilePath="/user/profile" className="mb-4" />
           <Outlet />
         </main>
       </div>

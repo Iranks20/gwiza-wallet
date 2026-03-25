@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { cn } from '@/lib/utils'
 
 type StatusType = 'active' | 'inactive' | 'pending' | 'success' | 'error' | 'warning' | 'blocked' | 'completed' | 'failed' | 'approved' | 'rejected' | string
 
@@ -32,13 +33,13 @@ export default function StatusBadge({ status, label, size = 'md' }: StatusBadgeP
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 font-medium rounded-full"
+      className={cn(
+        'inline-flex items-center gap-1.5 font-medium rounded-full',
+        size === 'sm' ? 'text-meta py-0.5 px-2' : 'text-caption py-1 px-2.5'
+      )}
       style={{
         background: config.bg,
         color: config.text,
-        fontSize: size === 'sm' ? 11 : 12,
-        padding: size === 'sm' ? '2px 8px' : '3px 10px',
-        fontFamily: "'Poppins', sans-serif",
       }}
     >
       <span className="rounded-full shrink-0" style={{ width: size === 'sm' ? 5 : 6, height: size === 'sm' ? 5 : 6, background: config.dot }} />

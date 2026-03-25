@@ -1,4 +1,3 @@
-import { GOOGLE_AUTH_CONFIG } from '@/config/environment'
 import { API_CONFIG } from '@/config/environment'
 
 export type UserProfileType = 'opco' | 'global'
@@ -38,6 +37,17 @@ export function setAuthFromResult(result: GoogleAuthResult): void {
   }
 }
 
+export function updateStoredUser(updates: Partial<GoogleAuthResult['user']>): void {
+  try {
+    const current = getStoredAuth()
+    if (!current?.user) return
+    const updated = { ...current, user: { ...current.user, ...updates } }
+    sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated))
+  } catch {
+    // ignore
+  }
+}
+
 export function getStoredAuth(): GoogleAuthResult | null {
   try {
     const raw = sessionStorage.getItem(AUTH_STORAGE_KEY)
@@ -56,11 +66,6 @@ export function clearStoredAuth(): void {
   } catch {
     // ignore
   }
-}
-
-function getVerifyBaseUrl(): string {
-  const base = GOOGLE_AUTH_CONFIG.BASE_URL ?? API_CONFIG.BASE_URL
-  return String(base).replace(/\/$/, '')
 }
 
 function parseVerifyResponse(data: unknown): GoogleAuthResult {
@@ -86,9 +91,17 @@ function parseVerifyResponse(data: unknown): GoogleAuthResult {
   }
 }
 
-export async function verifyIdTokenWithBackend(idToken: string): Promise<GoogleAuthResult> {
-  const base = getVerifyBaseUrl()
-  const url = `${base}/auth/google-login`
+export type GoogleLoginMfaRequired = {
+  requires2FA: true
+  mfaChallengeToken: string
+  user: GoogleBackendAuthPayload['user']
+}
+
+export type GoogleLoginResult = GoogleAuthResult | GoogleLoginMfaRequired
+
+export async function verifyIdTokenWithBackend(idToken: string): Promise<GoogleLoginResult> {
+  const base = API_CONFIG.BASE_URL
+  const url = `${String(base).replace(/\/$/, '')}/auth/google-login`
   const body = { auth_token: idToken }
 
   const res = await fetch(url, {
@@ -106,6 +119,38 @@ export async function verifyIdTokenWithBackend(idToken: string): Promise<GoogleA
   if (!res.ok) {
     const err = data as { resp_msg?: string; error?: string }
     throw new Error(err?.resp_msg ?? err?.error ?? `Request failed: ${res.status}`)
+  }
+  const envelope = data as {
+    success?: boolean
+    data?: {
+      mfa_required?: boolean
+      mfa_challenge_token?: string
+      access_token?: string
+      user?: Record<string, unknown> & { mfa_challenge_token?: string; mfa_required?: boolean }
+    }
+  }
+  const inner = envelope?.data
+  const userRaw = inner?.user
+  const user = userRaw as GoogleBackendAuthPayload['user'] | undefined
+
+  if (user && userRaw) {
+    const mfaEnabled = user.mfa_enabled === true
+    const mfaRequired =
+      inner?.mfa_required === true || (userRaw as { mfa_required?: boolean })?.mfa_required === true
+    const challengeToken =
+      inner?.mfa_challenge_token ??
+      (userRaw as { mfa_challenge_token?: string })?.mfa_challenge_token ??
+      (mfaEnabled ? inner?.access_token : undefined)
+
+    if ((mfaRequired || mfaEnabled) && challengeToken) {
+      const { mfa_challenge_token: _ct, mfa_required: _mr, ...cleanUser } =
+        userRaw as Record<string, unknown>
+      return {
+        requires2FA: true,
+        mfaChallengeToken: challengeToken,
+        user: cleanUser as GoogleBackendAuthPayload['user'],
+      }
+    }
   }
   return parseVerifyResponse(data)
 }

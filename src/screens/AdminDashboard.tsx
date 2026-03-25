@@ -182,52 +182,52 @@ export default function AdminDashboard() {
   }, [walletsTotal, txnToday, txnYesterday, feesToday, failedToday, failedYesterday, ruleBlocks])
 
   return (
-    <div className="font-sans">
-      <div className="mb-6">
-        <h1 className="font-bold text-2xl text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
+    <div>
+      <div className="mb-8">
+        <h1 className="text-page-title text-foreground">Dashboard</h1>
+        <p className="text-caption text-muted-foreground mt-1.5">
           {firstName ? `Welcome back, ${firstName} — ` : 'Welcome back — '}here's what's happening today.
         </p>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 rounded-xl border border-error/30 bg-error-muted text-error text-sm">{error}</div>
+        <div className="mb-6 p-4 rounded-lg border border-error/30 bg-error-muted text-error text-body">{error}</div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
         {kpis.map((kpi, i) => {
           const styles = KPI_STYLES[kpi.style]
           return (
-            <div key={i} className="rounded-xl p-5 border border-border bg-card shadow-sm">
-              <div className="flex items-start justify-between mb-3">
-                <div className={cn('w-11 h-11 rounded-lg flex items-center justify-center', styles.icon)}>
+            <div key={i} className="rounded-xl p-6 border border-border bg-card shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-start justify-between mb-4">
+                <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', styles.icon)}>
                   {kpi.icon}
                 </div>
-                <span className={cn('flex items-center gap-1 text-xs font-medium', styles.trend)}>
-                  {kpi.up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                <span className={cn('flex items-center gap-1 text-meta font-medium', styles.trend)}>
+                  {kpi.up ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                 </span>
               </div>
-              <p className="font-bold text-xl text-foreground">{kpi.value}</p>
-              <p className="text-xs mt-0.5 font-medium text-muted-foreground">{kpi.label}</p>
-              <p className={cn('text-xs mt-1', styles.trend)}>{kpi.change}</p>
+              <p className="font-semibold text-[1.375rem] text-foreground tracking-tight">{kpi.value}</p>
+              <p className="text-caption text-muted-foreground mt-1 font-medium">{kpi.label}</p>
+              <p className={cn('text-meta mt-1.5 font-medium', styles.trend)}>{kpi.change}</p>
             </div>
           )
         })}
       </div>
 
-      <div className="mb-6">
-        <div className="rounded-xl p-5 border border-border bg-card shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <div className="mb-8">
+        <div className="rounded-xl p-6 border border-border bg-card shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
             <div>
-              <h3 className="font-semibold text-foreground">Transaction Volume</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Last 7 days (from recent transactions)</p>
+              <h3 className="text-section text-foreground">Transaction Volume</h3>
+              <p className="text-meta text-muted-foreground mt-1">Last 7 days (from recent transactions)</p>
             </div>
-            <span className="text-xs px-3 py-1 rounded-full font-medium bg-primary-muted text-primary w-fit">Weekly</span>
+            <span className="text-meta px-3 py-1.5 rounded-lg font-medium bg-primary-muted text-primary w-fit">Weekly</span>
           </div>
           {loading ? (
-            <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">Loading chart...</div>
+            <div className="h-52 flex items-center justify-center text-muted-foreground text-body">Loading chart...</div>
           ) : (
-            <ChartContainer config={{ txns: { color: 'var(--primary)' }, fees: { color: 'var(--chart-2)' } }} className="h-48">
+            <ChartContainer config={{ txns: { color: 'var(--primary)' }, fees: { color: 'var(--chart-2)' } }} className="h-52">
               <AreaChart data={chartData.length ? chartData : [{ day: '—', txns: 0, fees: 0 }]}>
                 <defs>
                   <linearGradient id="txnGrad" x1="0" y1="0" x2="0" y2="1">
@@ -246,30 +246,30 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-xl border border-border bg-card shadow-sm">
-          <div className="flex items-center justify-between p-5 border-b border-border">
-            <h3 className="font-semibold text-foreground">Recent Transactions</h3>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h3 className="text-section text-foreground">Recent Transactions</h3>
             <Link to="/admin/transactions/register">
-              <button className="flex items-center gap-1 text-xs font-medium text-primary hover:underline cursor-pointer">
-                View all <ExternalLink size={11} />
+              <button className="flex items-center gap-1.5 text-caption font-medium text-primary hover:underline cursor-pointer">
+                View all <ExternalLink size={12} />
               </button>
             </Link>
           </div>
           <div className="divide-y divide-border">
             {loading ? (
-              <div className="px-5 py-6 text-center text-muted-foreground text-sm">Loading...</div>
+              <div className="px-6 py-8 text-center text-muted-foreground text-body">Loading...</div>
             ) : recentTxns.length === 0 ? (
-              <div className="px-5 py-6 text-center text-muted-foreground text-sm">No recent transactions</div>
+              <div className="px-6 py-8 text-center text-muted-foreground text-body">No recent transactions</div>
             ) : (
               recentTxns.map(txn => (
-                <div key={txn.transactionId} className="flex items-center justify-between px-5 py-3 hover:bg-muted/50 transition-colors gap-2">
+                <div key={txn.transactionId} className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-foreground text-sm truncate">TXN-{txn.transactionId}</p>
-                    <p className="text-xs text-muted-foreground truncate">WLT-{txn.srcWalletId} · {txn.operationTypeTag || txn.transactionType} · {formatRelativeTime(txn.transactionDate)}</p>
+                    <p className="font-medium text-foreground text-body truncate">TXN-{txn.transactionId}</p>
+                    <p className="text-meta text-muted-foreground truncate mt-0.5">WLT-{txn.srcWalletId} · {txn.operationTypeTag || txn.transactionType} · {formatRelativeTime(txn.transactionDate)}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-semibold text-foreground text-sm">{formatAmount(txn.transactionAmount, txn.currencyCode)}</span>
+                    <span className="font-semibold text-foreground text-body tabular-nums">{formatAmount(txn.transactionAmount, txn.currencyCode)}</span>
                     <Components.StatusBadge status={txn.txnStatus} size="sm" />
                   </div>
                 </div>
@@ -279,30 +279,30 @@ export default function AdminDashboard() {
         </div>
 
         <div className="rounded-xl border border-border bg-card shadow-sm">
-          <div className="flex items-center justify-between p-5 border-b border-border">
-            <h3 className="font-semibold text-foreground">Recent Audit Actions</h3>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h3 className="text-section text-foreground">Recent Audit Actions</h3>
             <Link to="/admin/transactions/audit-logs">
-              <button className="flex items-center gap-1 text-xs font-medium text-primary hover:underline cursor-pointer">
-                View all <ExternalLink size={11} />
+              <button className="flex items-center gap-1.5 text-caption font-medium text-primary hover:underline cursor-pointer">
+                View all <ExternalLink size={12} />
               </button>
             </Link>
           </div>
           <div className="divide-y divide-border">
             {loading ? (
-              <div className="px-5 py-6 text-center text-muted-foreground text-sm">Loading...</div>
+              <div className="px-6 py-8 text-center text-muted-foreground text-body">Loading...</div>
             ) : auditLogs.length === 0 ? (
-              <div className="px-5 py-6 text-center text-muted-foreground text-sm">No recent audit logs</div>
+              <div className="px-6 py-8 text-center text-muted-foreground text-body">No recent audit logs</div>
             ) : (
               auditLogs.map(log => (
-                <div key={log.id} className="flex items-start gap-3 px-5 py-4 hover:bg-muted/50 transition-colors">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-primary-foreground bg-primary">
+                <div key={log.id} className="flex items-start gap-3 px-6 py-4 hover:bg-muted/50 transition-colors">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-caption font-semibold text-primary-foreground bg-primary">
                     {log.performedBy.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm truncate">{log.action}</p>
-                    <p className="text-xs text-muted-foreground">{log.performedBy} · {formatRelativeTime(log.dateCreated)}</p>
+                    <p className="font-medium text-foreground text-body truncate">{log.action}</p>
+                    <p className="text-meta text-muted-foreground mt-0.5">{log.performedBy} · {formatRelativeTime(log.dateCreated)}</p>
                   </div>
-                  <span className="text-xs px-2 py-0.5 rounded font-medium bg-warning-muted text-warning shrink-0">
+                  <span className="text-meta px-2.5 py-1 rounded-md font-medium bg-warning-muted text-warning shrink-0">
                     {log.performedByType}
                   </span>
                 </div>

@@ -57,14 +57,18 @@ Legacy query parameter format (`?screen=ScreenName`) is also supported for backw
 
 ## Google Login
 
-Google Login is integrated using the backend at `https://gwiza-wallet.up.railway.app` (endpoint `/auth/google`).
+Google Login is integrated using the backend at `
+
+https://gwiza-wallet.up.railway.app` (endpoint `/auth/google`).
 
 ### Environment variables
 
 Create a `.env` file at the project root with at least:
 
 ```bash
-VITE_API_BASE_URL=https://gwiza-wallet.up.railway.app
+VITE_API_BASE_URL=
+
+https://gwiza-wallet.up.railway.app
 
 # Google OAuth credentials (from Google Cloud Console) — use your own values
 VITE_GOOGLE_CLIENT_ID=<your-google-client-id>.apps.googleusercontent.com

@@ -23,16 +23,16 @@ interface AdminPageHeaderProps {
 
 export default function AdminPageHeader({ title, subtitle, titleTrailing, action, secondaryAction, className }: AdminPageHeaderProps) {
   return (
-    <div className={cn('flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6', className)}>
+    <div className={cn('flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8', className)}>
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="font-bold text-2xl text-foreground">
+          <h1 className="text-page-title text-foreground">
             {title}
           </h1>
           {titleTrailing}
         </div>
         {subtitle && (
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-caption text-muted-foreground">
             {subtitle}
           </p>
         )}

@@ -19,8 +19,8 @@ function formatDateTime(s: string | null): string {
   }
 }
 
-const inputClass = "w-full px-3 py-2 border border-input rounded-lg text-sm text-foreground bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-const selectClass = "w-full px-3 py-2 border border-input rounded-lg text-sm text-foreground bg-background cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+const inputClass = "w-full px-3.5 py-2.5 border border-input rounded-lg text-body text-foreground bg-background placeholder:text-muted-foreground transition-all duration-150"
+const selectClass = "w-full px-3.5 py-2.5 border border-input rounded-lg text-body text-foreground bg-background cursor-pointer transition-all duration-150"
 
 interface EditUserDrawerProps {
   open: boolean
@@ -57,32 +57,31 @@ function EditUserDrawer({ open, onClose, user, accessLevels, onSave }: EditUserD
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-96 bg-white h-full shadow-2xl flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }}>
-        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
-          <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>
+      <div className="w-96 bg-card h-full shadow-2xl flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-section text-foreground">
             Edit User Account
           </h2>
-          <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg">
+          <button onClick={onClose} className="cursor-pointer hover:bg-muted p-1.5 rounded-lg transition-colors">
             <X size={18} />
           </button>
         </div>
-        <div className="flex-1 overflow-auto p-6 space-y-4">
+        <div className="flex-1 overflow-auto p-6 space-y-5">
           <div>
-            <p className="text-xs mb-1" style={{ color: '#6B7280' }}>User</p>
-            <p className="font-medium" style={{ color: '#04304B', fontSize: 14 }}>
+            <p className="text-meta mb-1.5 text-muted-foreground">User</p>
+            <p className="text-body font-medium text-foreground">
               {user.fullName || user.userName}
             </p>
-            <p className="text-sm" style={{ color: '#6B7280' }}>{user.email}</p>
+            <p className="text-caption text-muted-foreground">{user.email}</p>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>
+            <label className="block text-caption font-medium mb-1.5 text-foreground">
               Access Level
             </label>
             <select
               value={accessLevel}
               onChange={(e) => setAccessLevel(Number(e.target.value))}
-              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer"
-              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
+              className={selectClass}
             >
               {accessLevels.length === 0 ? (
                 <option value={user.accessLevel}>Level {user.accessLevel}</option>
@@ -96,14 +95,13 @@ function EditUserDrawer({ open, onClose, user, accessLevels, onSave }: EditUserD
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>
+            <label className="block text-caption font-medium mb-1.5 text-foreground">
               Status
             </label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as UserAccount['status'])}
-              className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer"
-              style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
+              className={selectClass}
             >
               <option value="new">New</option>
               <option value="active">Active</option>
@@ -112,19 +110,17 @@ function EditUserDrawer({ open, onClose, user, accessLevels, onSave }: EditUserD
             </select>
           </div>
         </div>
-        <div className="p-6 border-t flex gap-3" style={{ borderColor: '#E5E7EB' }}>
+        <div className="p-6 border-t border-border flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-lg border font-medium cursor-pointer hover:bg-gray-50 transition-colors"
-            style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 14 }}
+            className="flex-1 py-2.5 rounded-lg border border-border text-body font-medium cursor-pointer hover:bg-muted transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 py-2.5 rounded-lg font-medium text-white cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
-            style={{ background: '#37BBA2', fontSize: 14 }}
+            className="flex-1 py-2.5 rounded-lg text-body font-medium bg-primary text-primary-foreground cursor-pointer hover:bg-primary-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
@@ -217,7 +213,7 @@ export default function AdminUserAccounts() {
   }
 
   return (
-    <div className="font-sans">
+    <div>
       <Components.AdminPageHeader
         title="User Management"
         subtitle="View, filter, and update backoffice user accounts"
@@ -225,12 +221,12 @@ export default function AdminUserAccounts() {
 
       {error && (
         <div className="mb-4 px-4 py-3 rounded-xl border border-error/30 bg-error-muted text-error flex items-center justify-between">
-          <span className="text-sm">{error}</span>
-          <button onClick={() => setError(null)} className="text-sm font-medium hover:underline">Dismiss</button>
+          <span className="text-body">{error}</span>
+          <button onClick={() => setError(null)} className="text-body font-medium hover:underline">Dismiss</button>
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-4 mb-6">
         <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input
@@ -241,7 +237,7 @@ export default function AdminUserAccounts() {
           />
         </div>
         <div className="w-full sm:w-40">
-          <label className="block text-xs font-medium mb-1 text-muted-foreground">Status</label>
+          <label className="block text-meta font-medium mb-1.5 text-muted-foreground">Status</label>
           <select
             value={statusFilter}
             onChange={e => { setStatusFilter(e.target.value as typeof statusFilter); setPage(1) }}
@@ -260,8 +256,8 @@ export default function AdminUserAccounts() {
       </div>
 
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="px-4 sm:px-5 py-3 border-b border-border bg-muted/30">
-          <span className="text-sm text-muted-foreground">
+        <div className="px-5 sm:px-6 py-4 border-b border-border bg-muted/30">
+          <span className="text-caption text-muted-foreground">
             {loading ? 'Loading...' : `${filtered.length} users${pagination?.total ? ` · ${pagination.total} total` : ''}`}
           </span>
         </div>
@@ -270,32 +266,32 @@ export default function AdminUserAccounts() {
             <thead>
               <tr className="border-b border-border">
                 {['ID', 'Name', 'Email', 'Auth', 'Access', 'Status', 'Last login', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
+                  <th key={h} className="text-left px-5 py-4 text-meta font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {              loading ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-8 text-center text-muted-foreground text-sm">Loading users…</td>
+                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground text-body">Loading users…</td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-8 text-center text-muted-foreground text-sm">No users found for the selected filters.</td>
+                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground text-body">No users found for the selected filters.</td>
                 </tr>
               ) : (
                 filtered.map(u => {
                   const accessLevelName = accessLevels.find((l) => l.id === u.accessLevel)?.name ?? String(u.accessLevel)
                   return (
                     <tr key={u.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                      <td className="px-4 py-3"><span className="font-mono font-semibold text-primary text-xs">{u.id}</span></td>
-                      <td className="px-4 py-3"><span className="text-foreground text-sm">{u.fullName || u.userName}</span></td>
-                      <td className="px-4 py-3"><span className="text-foreground text-sm">{u.email}</span></td>
-                      <td className="px-4 py-3"><span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-info-muted text-info">{u.authType}</span></td>
-                      <td className="px-4 py-3"><span className="text-foreground text-sm">{accessLevelName}</span></td>
-                      <td className="px-4 py-3"><Components.StatusBadge status={u.status} size="sm" /></td>
-                      <td className="px-4 py-3"><span className="text-muted-foreground text-xs">{formatDateTime(u.lastLoginAt)}</span></td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4"><span className="font-mono font-semibold text-primary text-caption tabular-nums">{u.id}</span></td>
+                      <td className="px-5 py-4"><span className="text-foreground text-body">{u.fullName || u.userName}</span></td>
+                      <td className="px-5 py-4"><span className="text-foreground text-body">{u.email}</span></td>
+                      <td className="px-5 py-4"><span className="px-2.5 py-1 rounded-md text-meta font-medium bg-info-muted text-info">{u.authType}</span></td>
+                      <td className="px-5 py-4"><span className="text-foreground text-body">{accessLevelName}</span></td>
+                      <td className="px-5 py-4"><Components.StatusBadge status={u.status} size="sm" /></td>
+                      <td className="px-5 py-4"><span className="text-muted-foreground text-caption tabular-nums">{formatDateTime(u.lastLoginAt)}</span></td>
+                      <td className="px-5 py-4">
                         <button
                           onClick={() => { setEditUser(u); setEditDrawerOpen(true) }}
                           className="p-1.5 rounded-lg hover:bg-primary-muted cursor-pointer text-primary"
@@ -314,7 +310,7 @@ export default function AdminUserAccounts() {
         </div>
         {pagination && pagination.totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-5 py-3 border-t border-border">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-caption text-muted-foreground">
               Showing {(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
             </span>
             <div className="flex gap-1">
@@ -323,7 +319,7 @@ export default function AdminUserAccounts() {
                   key={p}
                   onClick={() => setPage(p)}
                   className={cn(
-                    'w-8 h-8 rounded-lg text-sm font-medium cursor-pointer transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0',
+                    'w-8 h-8 rounded-lg text-body font-medium cursor-pointer transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0',
                     p === page ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   )}
                 >

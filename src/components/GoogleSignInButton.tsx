@@ -9,14 +9,16 @@ type Props = {
   loginType?: 'admin' | 'user'
   onSuccess?: () => void
   onError?: (error: Error) => void
+  onRequires2FA?: () => void
   text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin'
   disabled?: boolean
 }
 
 export default function GoogleSignInButton({
-  loginType,
+  loginType = 'user',
   onSuccess,
   onError,
+  onRequires2FA,
   text = 'continue_with',
   disabled,
 }: Props) {
@@ -37,10 +39,24 @@ export default function GoogleSignInButton({
     setLoading(true)
     try {
       const result = await verifyIdTokenWithBackend(idToken)
-      auth.setAuth(result)
-      onSuccess?.()
-      const target = loginType === 'admin' ? '/admin/dashboard' : '/user/overview'
-      navigate(target, { replace: true })
+      if ('requires2FA' in result && result.requires2FA) {
+        auth.setPending2FAData({
+          mfaChallengeToken: result.mfaChallengeToken,
+          user: result.user,
+          loginType: loginType ?? 'user',
+        })
+        onRequires2FA?.()
+      } else if ('access_token' in result) {
+        auth.setAuth(result)
+        onSuccess?.()
+        const needs2FASetup = result.user?.mfa_enabled === false
+        const target = needs2FASetup
+          ? `/auth/setup-2fa?from=${loginType ?? 'user'}`
+          : loginType === 'admin'
+            ? '/admin/dashboard'
+            : '/user/overview'
+        navigate(target, { replace: true })
+      }
     } catch (e) {
       const err = e instanceof Error ? e : new Error('Google sign-in failed')
       if (FEATURE_FLAGS.ENABLE_CONSOLE_LOGS || FEATURE_FLAGS.DEBUG_MODE) {

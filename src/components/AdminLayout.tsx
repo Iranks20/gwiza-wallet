@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useAuth, getUserInitials } from '@/contexts/AuthContext'
+import TwoFactorRequirementBanner from '@/components/TwoFactorRequirementBanner'
 import { getCountryById } from '@/services/countriesService'
 import { cn } from '@/lib/utils'
 
@@ -125,7 +126,7 @@ export default function AdminLayout() {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary shrink-0">
               <Wallet size={16} className="text-primary-foreground" />
             </div>
-            <span className="font-bold text-white text-sm tracking-wide">GwizaWallet</span>
+            <span className="font-semibold text-white text-body tracking-tight">GwizaWallet</span>
           </div>
         )}
         {collapsed && (
@@ -165,7 +166,7 @@ export default function AdminLayout() {
                   to={item.to}
                   onClick={closeSidebar}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer text-sm font-medium',
+                    'flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer text-body font-medium',
                     isDirectActive
                       ? 'text-white bg-white/10'
                       : 'text-white/70 hover:text-white hover:bg-white/5'
@@ -270,7 +271,7 @@ export default function AdminLayout() {
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <header className="h-14 lg:h-16 flex items-center gap-3 lg:gap-4 px-4 lg:px-6 border-b border-border bg-card shrink-0 shadow-sm">
+        <header className="h-14 lg:h-16 flex items-center gap-3 lg:gap-4 px-4 lg:px-6 border-b border-border bg-card shrink-0">
           {isMobile && (
             <button
               onClick={() => setSidebarOpen(true)}
@@ -282,15 +283,15 @@ export default function AdminLayout() {
           )}
           <div className="flex-1 min-w-0 max-w-md">
             <div className="relative">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <input
                 placeholder="Search wallet ID, txn ID, MSISDN..."
-                className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-muted/50 text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary admin-input"
+                className="w-full pl-10 pr-4 py-2.5 text-body border border-input rounded-lg bg-muted/30 text-foreground placeholder:text-muted-foreground transition-all duration-150"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-2 lg:gap-3 shrink-0">
+          <div className="flex items-center gap-2 lg:gap-3 shrink-0 ml-auto">
             <div className="relative">
               <button
                 onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false) }}
@@ -301,18 +302,18 @@ export default function AdminLayout() {
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-chart-2" />
               </button>
               {notifOpen && (
-                <div className="absolute right-0 top-11 w-72 lg:w-80 bg-card rounded-xl border border-border shadow-lg z-50">
-                  <div className="p-4 border-b border-border">
-                    <h3 className="font-semibold text-sm text-foreground">Notifications</h3>
+                <div className="absolute right-0 top-12 w-80 bg-card rounded-xl border border-border shadow-lg z-50 overflow-hidden">
+                  <div className="px-5 py-4 border-b border-border">
+                    <h3 className="text-section text-foreground">Notifications</h3>
                   </div>
                   {[
                     { msg: '5 transactions flagged by rules', time: '2m ago' },
                     { msg: 'New KYC submission: WLT-00821', time: '14m ago' },
                     { msg: 'System health check passed', time: '1h ago' },
                   ].map((n, i) => (
-                    <div key={i} className="p-4 border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors">
-                      <p className="text-sm font-medium text-foreground">{n.msg}</p>
-                      <p className="text-xs mt-0.5 text-muted-foreground">{n.time}</p>
+                    <div key={i} className="px-5 py-4 border-b border-border last:border-0 hover:bg-muted/50 cursor-pointer transition-colors">
+                      <p className="text-body font-medium text-foreground">{n.msg}</p>
+                      <p className="text-meta text-muted-foreground mt-0.5">{n.time}</p>
                     </div>
                   ))}
                 </div>
@@ -327,16 +328,20 @@ export default function AdminLayout() {
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-primary-foreground text-xs font-bold bg-primary shrink-0">
                   {initials}
                 </div>
-                <span className="text-sm font-medium text-foreground hidden sm:inline truncate max-w-[120px]">{displayName}</span>
+                <span className="text-body font-medium text-foreground hidden sm:inline truncate max-w-[140px]">{displayName}</span>
                 <ChevronDown size={14} className="text-muted-foreground hidden sm:inline" />
               </button>
               {profileOpen && (
-                <div className="absolute right-0 top-11 w-48 bg-card rounded-xl border border-border shadow-lg z-50">
+                <div className="absolute right-0 top-12 w-52 bg-card rounded-xl border border-border shadow-lg z-50 overflow-hidden">
                   {['My Profile', 'Settings', 'Sign Out'].map((item, i) => (
                     <button
                       key={i}
-                      onClick={() => { if (item === 'Sign Out') auth.signOut(); setProfileOpen(false) }}
-                      className="w-full text-left px-4 py-3 text-sm hover:bg-muted/50 cursor-pointer transition-colors text-foreground first:rounded-t-xl last:rounded-b-xl"
+                      onClick={() => {
+                        if (item === 'My Profile') navigate('/admin/profile')
+                        else if (item === 'Sign Out') auth.signOut()
+                        setProfileOpen(false)
+                      }}
+                      className="w-full text-left px-5 py-3.5 text-body hover:bg-muted/50 cursor-pointer transition-colors text-foreground"
                     >
                       {item}
                     </button>
@@ -348,6 +353,7 @@ export default function AdminLayout() {
         </header>
 
         <main className="flex-1 overflow-auto p-4 lg:p-6 bg-background">
+          <TwoFactorRequirementBanner profilePath="/admin/profile" className="mb-4" />
           <Outlet />
         </main>
       </div>

@@ -4,129 +4,87 @@ import { Link } from '@/lib'
 import { Wallet, Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import GoogleSignInButton from '@/components/GoogleSignInButton'
+import TwoFactorVerification from '@/components/TwoFactorVerification'
+import { useAuth } from '@/contexts/AuthContext'
+import type { GoogleAuthResult } from '@/services/googleAuth'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-const DEMO_ADMIN_EMAIL = 'admin@fintech.io'
-const DEMO_ADMIN_PASSWORD = 'Admin123!'
-const DEMO_USER_IDENTIFIER = '+250781234567'
-const DEMO_USER_PASSWORD = 'User123!'
-
-type TabKey = 'admin' | 'user'
+const DEMO_EMAIL = 'admin@fintech.io'
+const DEMO_PASSWORD = 'Admin123!'
 
 export default function AuthSplash() {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<TabKey>('admin')
+  const auth = useAuth()
   const [showPassword, setShowPassword] = useState(false)
-  const [adminEmail, setAdminEmail] = useState(DEMO_ADMIN_EMAIL)
-  const [adminPassword, setAdminPassword] = useState(DEMO_ADMIN_PASSWORD)
-  const [userId, setUserId] = useState(DEMO_USER_IDENTIFIER)
-  const [userPassword, setUserPassword] = useState(DEMO_USER_PASSWORD)
+  const show2FA = auth.pending2FA?.loginType === 'admin'
+  const [email, setEmail] = useState(DEMO_EMAIL)
+  const [password, setPassword] = useState(DEMO_PASSWORD)
   const [error, setError] = useState<string | null>(null)
   const [googleError, setGoogleError] = useState<string | null>(null)
-
-  const isAdmin = tab === 'admin'
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setGoogleError(null)
 
-    if (isAdmin) {
-      if (adminEmail === DEMO_ADMIN_EMAIL && adminPassword === DEMO_ADMIN_PASSWORD) {
-        navigate('/admin/dashboard')
-      } else {
-        setError('Invalid admin credentials. Use admin@fintech.io / Admin123!')
+    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      const demoAuth: GoogleAuthResult = {
+        user: {
+          user_account_id: 'demo-admin',
+          email_address: email,
+          full_name: 'Demo Admin',
+          user_account_status: 'active',
+          access_level: 9,
+          mfa_enabled: true,
+        },
+        access_token: 'demo-token',
+        token_type: 'Bearer',
+        expires_in: 3600,
+        scope: 'openid email profile',
       }
+      auth.setAuth(demoAuth)
+      navigate('/admin/dashboard')
     } else {
-      if (userId === DEMO_USER_IDENTIFIER && userPassword === DEMO_USER_PASSWORD) {
-        navigate('/user/overview')
-      } else {
-        setError('Invalid wallet credentials. Use +250781234567 / User123!')
-      }
+      setError('Invalid credentials. Use admin@fintech.io / Admin123!')
     }
   }
 
-  const demoLine = isAdmin
-    ? `Demo: ${DEMO_ADMIN_EMAIL} / ${DEMO_ADMIN_PASSWORD}`
-    : `Demo: ${DEMO_USER_IDENTIFIER} / ${DEMO_USER_PASSWORD}`
-
-  const inputClass = "w-full px-3 py-2.5 border border-input rounded-lg text-sm text-foreground bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+  const inputClass = "w-full px-3.5 py-3 border border-input rounded-lg text-body text-foreground bg-background placeholder:text-muted-foreground transition-all duration-150"
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 font-sans">
-      <div className="w-full max-w-md bg-card rounded-2xl shadow-xl p-6 sm:p-8 border border-border">
-        <div className="flex flex-col items-center mb-4">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 bg-primary">
-            <Wallet size={24} className="text-primary-foreground" />
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md bg-card rounded-2xl shadow-lg p-8 sm:p-10 border border-border">
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 bg-primary">
+            <Wallet size={28} className="text-primary-foreground" />
           </div>
-          <h1 className="font-bold text-xl sm:text-2xl text-foreground mb-1">GwizaWallet</h1>
-          <p className="text-center text-sm text-muted-foreground">Sign in to continue.</p>
+          <h1 className="text-page-title text-foreground mb-2">GwizaWallet</h1>
+          <p className="text-center text-caption text-muted-foreground">Sign in to continue.</p>
         </div>
-
-        <div className="flex mb-4 p-1 rounded-full border border-border bg-muted">
-          {(['admin', 'user'] as TabKey[]).map(t => {
-            const active = tab === t
-            return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => { setTab(t); setError(null) }}
-                className={cn(
-                  'flex-1 py-2 text-xs font-medium rounded-full cursor-pointer transition-colors',
-                  active ? 'bg-primary-muted text-primary' : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {t === 'admin' ? 'Admin / Backoffice' : 'Wallet User'}
-              </button>
-            )
-          })}
-        </div>
-
-        <p className="mb-2 text-xs text-center text-muted-foreground">{demoLine}</p>
 
         {(error || googleError) && (
-          <div className="mb-3 px-3 py-2 rounded-lg bg-error-muted text-error text-sm border border-error/30">
+          <div className="mb-4 px-4 py-3 rounded-lg bg-error-muted text-error text-body border border-error/30">
             {error || googleError}
           </div>
         )}
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {isAdmin ? (
-            <>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-foreground">Admin email</label>
-                <input type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} className={inputClass} placeholder="admin@fintech.io" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-foreground">Password</label>
-                <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} value={adminPassword} onChange={e => setAdminPassword(e.target.value)} className={cn(inputClass, 'pr-10')} placeholder="••••••••" />
-                  <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute inset-y-0 right-0 px-3 flex items-center text-muted-foreground hover:text-foreground cursor-pointer" aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-foreground">Email or phone</label>
-                <input type="text" value={userId} onChange={e => setUserId(e.target.value)} className={inputClass} placeholder="+2507..." />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-foreground">Password</label>
-                <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} value={userPassword} onChange={e => setUserPassword(e.target.value)} className={cn(inputClass, 'pr-10')} placeholder="••••••••" />
-                  <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute inset-y-0 right-0 px-3 flex items-center text-muted-foreground hover:text-foreground cursor-pointer" aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <div>
+            <label className="block text-caption font-medium mb-1.5 text-foreground">Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} placeholder="admin@fintech.io" />
+          </div>
+          <div>
+            <label className="block text-caption font-medium mb-1.5 text-foreground">Password</label>
+            <div className="relative">
+              <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} className={cn(inputClass, 'pr-10')} placeholder="••••••••" />
+              <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute inset-y-0 right-0 px-3 flex items-center text-muted-foreground hover:text-foreground cursor-pointer" aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
 
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between text-meta text-muted-foreground">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" className="w-3.5 h-3.5 rounded border-border" />
               <span>Remember me</span>
@@ -134,22 +92,29 @@ export default function AuthSplash() {
             <Link to="/auth/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
           </div>
 
-          <Button type="submit" className="w-full py-6">
-            {isAdmin ? 'Login as admin' : 'Login to wallet'}
+          <Button type="submit" className="w-full py-3.5 text-body font-medium">
+            Sign in
           </Button>
         </form>
 
         <div className="mt-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Or continue with</span>
+            <span className="text-meta font-medium uppercase tracking-wider text-muted-foreground">Or continue with</span>
             <div className="flex-1 h-px bg-border" />
           </div>
           <GoogleSignInButton
-            loginType={isAdmin ? 'admin' : 'user'}
+            loginType="admin"
             onError={err => setGoogleError(err instanceof Error ? err.message : 'Google sign-in failed. Please try again.')}
           />
         </div>
+
+        <TwoFactorVerification
+          open={show2FA}
+          onClose={() => auth.setPending2FAData(null)}
+          onSuccess={() => navigate('/admin/dashboard', { replace: true })}
+          loginType="admin"
+        />
       </div>
     </div>
   )

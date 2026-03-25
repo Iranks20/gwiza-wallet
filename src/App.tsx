@@ -5,6 +5,8 @@ import AdminLogin from './screens/AdminLogin'
 import UserLogin from './screens/UserLogin'
 import AuthSplash from './screens/AuthSplash'
 import AuthCallback from './screens/AuthCallback'
+import TwoFactorSetupRequired from './screens/TwoFactorSetupRequired'
+import Require2FASetup from './components/Require2FASetup'
 import ForgotPassword from './screens/ForgotPassword'
 import ResetPassword from './screens/ResetPassword'
 import OtpVerification from './screens/OtpVerification'
@@ -21,6 +23,7 @@ import AdminTransactionRegister from './screens/AdminTransactionRegister'
 import AdminAuditLogs from './screens/AdminAuditLogs'
 import AdminFeesLedger from './screens/AdminFeesLedger'
 import AdminUserAccounts from './screens/AdminUserAccounts'
+import AdminProfile from './screens/AdminProfile'
 import AdminHealth from './screens/AdminHealth'
 import AdminReady from './screens/AdminReady'
 
@@ -68,9 +71,10 @@ export default function App() {
       <Route path="/auth/forgot-password" element={<ForgotPassword />} />
       <Route path="/auth/reset-password" element={<ResetPassword />} />
       <Route path="/auth/verify-otp" element={<OtpVerification />} />
+      <Route path="/auth/setup-2fa" element={<TwoFactorSetupRequired />} />
 
       {/* Admin */}
-      <Route path="/admin" element={<AdminLayout />}>
+      <Route path="/admin" element={<Require2FASetup loginType="admin"><AdminLayout /></Require2FASetup>}>
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
 
@@ -99,6 +103,7 @@ export default function App() {
         <Route path="settings/user-access-levels" element={<AdminUserAccessLevels />} />
 
         <Route path="user-accounts" element={<AdminUserAccounts />} />
+        <Route path="profile" element={<AdminProfile />} />
 
         <Route path="wallets" element={<AdminWallets />} />
         <Route path="wallets/:walletId" element={<AdminWalletDetails />} />
@@ -110,7 +115,7 @@ export default function App() {
       </Route>
 
       {/* User */}
-      <Route path="/user" element={<UserLayout />}>
+      <Route path="/user" element={<Require2FASetup loginType="user"><UserLayout /></Require2FASetup>}>
         <Route index element={<Navigate to="/user/overview" replace />} />
         <Route path="overview" element={<UserOverview />} />
         <Route path="wallets" element={<UserWallets />} />
