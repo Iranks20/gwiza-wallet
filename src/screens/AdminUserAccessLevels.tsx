@@ -5,6 +5,43 @@ import Components from '../components'
 import { Plus, Edit2, X } from 'lucide-react'
 import { useraccesslevelsApi, type UserAccessLevel } from '@/api/useraccesslevels'
 import { useraccessrightsApi, type UserAccessRight } from '@/api/useraccessrights'
+import { useAuth } from '@/contexts/AuthContext'
+import type { MenuOption } from '@/services/googleAuth'
+
+function normalizeStoredPermissionsToIds(raw: string | undefined, catalog: UserAccessRight[]): string {
+  if (!raw?.trim()) return ''
+  const byKey = new Map(catalog.map((r) => [r.menuKey, r]))
+  const ids = new Set<string>()
+  for (const t of raw.split(',').map((s) => s.trim()).filter(Boolean)) {
+    if (/^\d+$/.test(t)) {
+      ids.add(t)
+      continue
+    }
+    const row = byKey.get(t)
+    if (row) ids.add(String(row.menuId))
+  }
+  return Array.from(ids)
+    .sort((a, b) => Number(a) - Number(b))
+    .join(', ')
+}
+
+function defaultIdsFromSessionMenus(menuOptions: MenuOption[], catalog: UserAccessRight[]): string {
+  if (!catalog.length || !menuOptions.length) return ''
+  const byKey = new Map(catalog.map((r) => [r.menuKey, r]))
+  const ids = new Set<string>()
+  for (const m of menuOptions) {
+    const fromId = m.id != null && Number(m.id) > 0 ? String(m.id) : null
+    if (fromId) {
+      ids.add(fromId)
+      continue
+    }
+    const row = byKey.get(m.menuKey)
+    if (row) ids.add(String(row.menuId))
+  }
+  return Array.from(ids)
+    .sort((a, b) => Number(a) - Number(b))
+    .join(', ')
+}
 
 const emptyForm: Omit<UserAccessLevel, 'id'> = {
   name: '',
@@ -24,12 +61,25 @@ interface AccessLevelDrawerProps {
 }
 
 function AccessLevelDrawer({ open, onClose, level, menuRights, existingLevels, onSave }: AccessLevelDrawerProps) {
+  const auth = useAuth()
   const [form, setForm] = useState<Omit<UserAccessLevel, 'id'> & { id?: number }>({ ...emptyForm })
   const [allLevelsForDropdown, setAllLevelsForDropdown] = useState<UserAccessLevel[]>([])
 
   useEffect(() => {
-    if (open) setForm(level ? { ...level, accessLevelCreatorId: level.accessLevelCreatorId ?? 0 } : { ...emptyForm })
-  }, [open, level])
+    if (!open) return
+    if (level) {
+      setForm({
+        ...level,
+        accessLevelCreatorId: level.accessLevelCreatorId ?? 0,
+        allowedPermissions: normalizeStoredPermissionsToIds(level.allowedPermissions, menuRights),
+      })
+    } else {
+      setForm({
+        ...emptyForm,
+        allowedPermissions: defaultIdsFromSessionMenus(auth.menuOptions ?? [], menuRights),
+      })
+    }
+  }, [open, level, menuRights])
 
   useEffect(() => {
     if (open) {
@@ -47,13 +97,15 @@ function AccessLevelDrawer({ open, onClose, level, menuRights, existingLevels, o
     ? form.allowedPermissions.split(',').map((s) => s.trim()).filter(Boolean)
     : []
 
-  const isSelected = (r: UserAccessRight) => selectedValues.includes(r.menuKey)
+  const isSelected = (r: UserAccessRight) => selectedValues.includes(String(r.menuId))
 
-  const toggleMenuKey = (r: UserAccessRight) => {
+  const toggleMenuId = (r: UserAccessRight) => {
+    const idStr = String(r.menuId)
     const set = new Set(selectedValues)
-    if (set.has(r.menuKey)) set.delete(r.menuKey)
-    else set.add(r.menuKey)
-    setForm((f) => ({ ...f, allowedPermissions: Array.from(set).join(', ') }))
+    if (set.has(idStr)) set.delete(idStr)
+    else set.add(idStr)
+    const sorted = Array.from(set).sort((a, b) => Number(a) - Number(b))
+    setForm((f) => ({ ...f, allowedPermissions: sorted.join(', ') }))
   }
 
   const handleSave = () => {
@@ -132,7 +184,7 @@ function AccessLevelDrawer({ open, onClose, level, menuRights, existingLevels, o
               Allowed menu keys (User Access Rights)
             </label>
             <div
-              className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-1.5"
+              className="min-h-[14rem] max-h-[min(28rem,55vh)] overflow-y-auto border rounded-lg p-2 space-y-1.5"
               style={{ borderColor: '#E5E7EB', background: '#FAFBFC' }}
             >
               {menuRights.length === 0 ? (
@@ -148,11 +200,14 @@ function AccessLevelDrawer({ open, onClose, level, menuRights, existingLevels, o
                     <input
                       type="checkbox"
                       checked={isSelected(r)}
-                      onChange={() => toggleMenuKey(r)}
+                      onChange={() => toggleMenuId(r)}
                       className="w-4 h-4 rounded cursor-pointer mt-0.5 shrink-0"
                       style={{ accentColor: '#37BBA2' }}
                     />
                     <span className="text-sm min-w-0" style={{ color: '#04304B' }}>
+                      <span className="text-[11px] font-medium" style={{ color: '#6B7280' }}>
+                        id {r.menuId}
+                      </span>{' '}
                       <span className="font-mono text-xs">{r.menuKey}</span>
                       {r.menuLabel ? (
                         <span className="block text-[11px] mt-0.5" style={{ color: '#9CA3AF' }}>
@@ -166,8 +221,10 @@ function AccessLevelDrawer({ open, onClose, level, menuRights, existingLevels, o
               )}
             </div>
             <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
-              Stored as comma-separated <code className="text-[11px]">menu_key</code> values in allowed permissions (backend field{' '}
-              <code className="text-[11px]">access_level_allowed_permissions</code>).
+              Stored as comma-separated <code className="text-[11px]">menu_id</code> values in{' '}
+              <code className="text-[11px]">access_level_allowed_permissions</code>. Add mode pre-selects ids from your current session
+              menus; existing <code className="text-[11px]">menu_key</code> values in saved data are converted to ids when you open
+              edit.
             </p>
           </div>
           <div>
@@ -212,6 +269,7 @@ export default function AdminUserAccessLevels() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerNonce, setDrawerNonce] = useState(0)
   const [editLevel, setEditLevel] = useState<UserAccessLevel | null>(null)
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState<{ page: number; limit: number; total: number; totalPages: number } | null>(null)
@@ -273,6 +331,7 @@ export default function AdminUserAccessLevels() {
           label: 'Add Access Level',
           onClick: () => {
             setEditLevel(null)
+            setDrawerNonce((n) => n + 1)
             setDrawerOpen(true)
           },
           icon: <Plus size={15} />,
@@ -343,6 +402,7 @@ export default function AdminUserAccessLevels() {
                     <button
                       onClick={() => {
                         setEditLevel(l)
+                        setDrawerNonce((n) => n + 1)
                         setDrawerOpen(true)
                       }}
                       className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer"
@@ -389,6 +449,7 @@ export default function AdminUserAccessLevels() {
       </div>
 
       <AccessLevelDrawer
+        key={`${editLevel?.id ?? 'add'}-${drawerNonce}`}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         level={editLevel}
