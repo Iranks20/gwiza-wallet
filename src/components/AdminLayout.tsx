@@ -18,32 +18,14 @@ interface NavItem {
   children?: { label: string; to: string }[]
 }
 
-const baseSettingsChildren = [
-  { label: 'Currencies', to: '/admin/settings/currencies' },
-  { label: 'Transaction Operation Types', to: '/admin/settings/transaction-operation-types' },
-  { label: 'Profile Permissions', to: '/admin/settings/profile-permissions' },
-  { label: 'User Access Levels', to: '/admin/settings/user-access-levels' },
-]
-
-const baseNavItems: NavItem[] = [
-  { label: 'Dashboard', icon: <LayoutDashboard size={18} />, to: '/admin/dashboard' },
-  {
-    label: 'Settings',
-    icon: <Sliders size={18} />,
-    children: [{ label: 'Countries', to: '/admin/settings/countries' }, ...baseSettingsChildren],
-  },
-  { label: 'User Management', icon: <Users size={18} />, to: '/admin/user-accounts' },
-  { label: 'Wallets', icon: <Wallet size={18} />, to: '/admin/wallets' },
-  {
-    label: 'Transactions',
-    icon: <Activity size={18} />,
-    children: [
-      { label: 'Transaction Register', to: '/admin/transactions/register' },
-      { label: 'Audit Logs', to: '/admin/transactions/audit-logs' },
-      { label: 'Fees Ledger', to: '/admin/transactions/fees-ledger' },
-    ],
-  },
-]
+function getIconForMenuKey(menuKey: string): React.ReactNode {
+  if (menuKey === 'admin.dashboard') return <LayoutDashboard size={18} />
+  if (menuKey === 'admin.settings') return <Sliders size={18} />
+  if (menuKey === 'admin.user_management') return <Users size={18} />
+  if (menuKey === 'admin.wallets') return <Wallet size={18} />
+  if (menuKey === 'admin.transactions') return <Activity size={18} />
+  return <LayoutDashboard size={18} />
+}
 
 export default function AdminLayout() {
   const navigate = useNavigate()
@@ -74,24 +56,87 @@ export default function AdminLayout() {
   }, [profileType, countryId])
 
   const navItems = useMemo((): NavItem[] => {
-    const countryNavItem =
-      profileType === 'opco' && countryId != null && countryId > 0
-        ? {
-            label: opcoCountryName ?? `Country ${countryId}`,
-            to: `/admin/settings/countries/${countryId}/configure`,
-          }
-        : { label: 'Countries', to: '/admin/settings/countries' }
+    const menuOptions = auth.menuOptions
+      .filter((m) => (m.onMenu ?? 'Yes') === 'Yes')
+      .filter((m) => m.menuKey.startsWith('admin.'))
 
-    return baseNavItems.map((item) => {
-      if (item.label === 'Settings') {
+    const byKey = new Map(menuOptions.map((m) => [m.menuKey, m]))
+    const roots = menuOptions
+      .filter((m) => !m.parentKey)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+
+    const childrenByParent = new Map<string, typeof menuOptions>()
+    menuOptions.forEach((m) => {
+      if (!m.parentKey) return
+      const arr = childrenByParent.get(m.parentKey) ?? []
+      arr.push(m)
+      childrenByParent.set(m.parentKey, arr)
+    })
+    Array.from(childrenByParent.entries()).forEach(([k, v]) => {
+      childrenByParent.set(k, v.sort((a, b) => a.sortOrder - b.sortOrder))
+    })
+
+    const normalizeRoute = (routePath: string | null): string | null => {
+      if (!routePath) return null
+      const p = String(routePath).trim()
+      return p ? p : null
+    }
+
+    const routeOverrideForCountries = (menuKey: string, routePath: string | null): string | null => {
+      if (menuKey !== 'admin.settings.countries') return routePath
+      if (profileType === 'opco' && countryId != null && countryId > 0) {
+        return `/admin/settings/countries/${countryId}/configure`
+      }
+      return routePath
+    }
+
+    const labelOverrideForCountries = (menuKey: string, label: string): string => {
+      if (menuKey !== 'admin.settings.countries') return label
+      if (profileType === 'opco' && countryId != null && countryId > 0) {
+        return opcoCountryName ?? `Country ${countryId}`
+      }
+      return label
+    }
+
+    const toNavItem = (m: (typeof menuOptions)[number]): NavItem | null => {
+      const routePath = normalizeRoute(m.routePath)
+      const overriddenRoute = routeOverrideForCountries(m.menuKey, routePath)
+      const label = labelOverrideForCountries(m.menuKey, m.menuLabel)
+      if (m.isGroup) {
+        const kids = (childrenByParent.get(m.menuKey) ?? [])
+          .map((c) => {
+            const childRouteBase = normalizeRoute(c.routePath)
+            const childRoute = routeOverrideForCountries(c.menuKey, childRouteBase)
+            if (!childRoute) return null
+            return { label: labelOverrideForCountries(c.menuKey, c.menuLabel), to: childRoute }
+          })
+          .filter(Boolean) as { label: string; to: string }[]
         return {
-          ...item,
-          children: [countryNavItem, ...baseSettingsChildren],
+          label,
+          icon: getIconForMenuKey(m.menuKey),
+          children: kids.length ? kids : undefined,
         }
       }
-      return item
-    })
-  }, [profileType, countryId, opcoCountryName])
+
+      if (!overriddenRoute) return null
+      return {
+        label,
+        icon: getIconForMenuKey(m.menuKey),
+        to: overriddenRoute,
+      }
+    }
+
+    const built = roots.map(toNavItem).filter(Boolean) as NavItem[]
+
+    const settingsKey = 'admin.settings'
+    const settings = byKey.get(settingsKey)
+    if (settings && !settings.isGroup) {
+      const i = built.findIndex((x) => x.to === normalizeRoute(settings.routePath))
+      if (i >= 0) built[i] = { ...built[i], children: childrenByParent.get(settingsKey)?.map((c) => ({ label: c.menuLabel, to: String(c.routePath ?? '') })).filter((c) => c.to) }
+    }
+
+    return built
+  }, [auth.menuOptions, profileType, countryId, opcoCountryName])
 
   const toggleGroup = (label: string) => {
     setExpandedGroups(prev =>

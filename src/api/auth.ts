@@ -1,3 +1,5 @@
+import { parseMenuOptions, type MenuOption } from '@/services/googleAuth'
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://gwiza-wallet.up.railway.app/'
 
 
@@ -19,6 +21,7 @@ export type MfaCompleteLoginResponse = {
   token_type: string
   expires_in: number
   scope: string
+  menuOptions: MenuOption[]
 }
 
 export const authApi = {
@@ -43,11 +46,20 @@ export const authApi = {
       const err = data as { resp_msg?: string; error?: string }
       throw new Error(err?.resp_msg ?? err?.error ?? `Request failed: ${res.status}`)
     }
-    const envelope = data as { success?: boolean; data?: MfaCompleteLoginResponse }
-    const payload = envelope?.data && envelope.success ? envelope.data : (data as MfaCompleteLoginResponse)
+    const envelope = data as { success?: boolean; data?: Record<string, unknown> }
+    const payload =
+      envelope?.data && envelope.success ? envelope.data : (data as Record<string, unknown>)
     if (!payload?.user || !payload?.access_token) {
       throw new Error('Invalid response from auth server')
     }
-    return payload
+    const menuOptions = parseMenuOptions(payload.menu_options)
+    return {
+      user: payload.user as MfaCompleteLoginResponse['user'],
+      access_token: String(payload.access_token),
+      token_type: String(payload.token_type ?? 'Bearer'),
+      expires_in: Number(payload.expires_in ?? 0),
+      scope: String(payload.scope ?? ''),
+      menuOptions,
+    }
   },
 }

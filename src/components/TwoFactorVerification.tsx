@@ -54,6 +54,7 @@ export default function TwoFactorVerification({
         token_type: result.token_type ?? 'Bearer',
         expires_in: result.expires_in ?? 0,
         scope: result.scope ?? '',
+        menuOptions: result.menuOptions,
       })
       setCode('')
       onSuccess()

@@ -8,6 +8,7 @@ import {
   clearStoredAuth,
   updateStoredUser,
   type GoogleAuthResult,
+  type MenuOption,
 } from '@/services/googleAuth'
 
 export type AuthUser = GoogleAuthResult['user']
@@ -22,6 +23,7 @@ type AuthContextValue = {
   user: AuthUser | null
   accessToken: string | null
   isAuthenticated: boolean
+  menuOptions: MenuOption[]
   pending2FA: Pending2FAData | null
   setAuth: (result: GoogleAuthResult) => void
   setPending2FAData: (data: Pending2FAData | null) => void
@@ -74,8 +76,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const complete2FALogin = useCallback((result: GoogleAuthResult) => {
-    setAuthFromResult(result)
-    setAuthState(result)
+    const finalResult: GoogleAuthResult = {
+      ...result,
+      menuOptions: result.menuOptions ?? [],
+    }
+    setAuthFromResult(finalResult)
+    setAuthState(finalResult)
     setPending2FA(null)
   }, [])
 
@@ -98,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: auth?.user ?? null,
       accessToken: auth?.access_token ?? null,
       isAuthenticated: Boolean(auth?.user && auth?.access_token),
+      menuOptions: auth?.menuOptions ?? [],
       pending2FA,
       setAuth,
       setPending2FAData,

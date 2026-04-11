@@ -7,13 +7,14 @@ import { useAuth } from '@/contexts/AuthContext'
 import TwoFactorRequirementBanner from '@/components/TwoFactorRequirementBanner'
 import { cn } from '@/lib/utils'
 
-const items = [
-  { key: 'overview', label: 'Overview', icon: <LayoutGrid size={18} />, path: '/user/overview' },
-  { key: 'wallets', label: 'My Wallets', icon: <Wallet size={18} />, path: '/user/wallets' },
-  { key: 'transactions', label: 'Transactions', icon: <ListChecks size={18} />, path: '/user/transactions' },
-  { key: 'fees', label: 'Fees', icon: <Receipt size={18} />, path: '/user/fees' },
-  { key: 'profile', label: 'Profile', icon: <User size={18} />, path: '/user/profile' },
-]
+function getIconForUserMenuKey(menuKey: string): React.ReactNode {
+  if (menuKey === 'user.overview') return <LayoutGrid size={18} />
+  if (menuKey === 'user.wallets') return <Wallet size={18} />
+  if (menuKey === 'user.transactions') return <ListChecks size={18} />
+  if (menuKey === 'user.fees') return <Receipt size={18} />
+  if (menuKey === 'user.profile') return <User size={18} />
+  return <LayoutGrid size={18} />
+}
 
 export default function UserLayout() {
   const location = useLocation()
@@ -22,6 +23,18 @@ export default function UserLayout() {
   const auth = useAuth()
   const displayName = auth.user?.full_name ?? 'User'
   const displayEmail = auth.user?.email_address ?? '—'
+  const items =
+    auth.menuOptions
+      .filter((m) => (m.onMenu ?? 'Yes') === 'Yes')
+      .filter((m) => m.menuKey.startsWith('user.') && !m.parentKey && !m.isGroup)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((m) => ({
+        key: m.menuKey,
+        label: m.menuLabel,
+        icon: getIconForUserMenuKey(m.menuKey),
+        path: String(m.routePath ?? ''),
+      }))
+      .filter((i) => i.path)
 
   return (
     <div className="flex h-screen overflow-hidden bg-background font-sans">

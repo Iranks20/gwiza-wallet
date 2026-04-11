@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Components from '../components'
 import { Plus, Edit2, X } from 'lucide-react'
 import { useraccesslevelsApi, type UserAccessLevel } from '@/api/useraccesslevels'
-import { listPermissionsCatalog } from '@/services/permissionsCatalogService'
-import type { PermissionCatalogItem } from '@/services/permissionsCatalogService'
+import { useraccessrightsApi, type UserAccessRight } from '@/api/useraccessrights'
 
 const emptyForm: Omit<UserAccessLevel, 'id'> = {
   name: '',
@@ -19,12 +18,12 @@ interface AccessLevelDrawerProps {
   open: boolean
   onClose: () => void
   level: UserAccessLevel | null
-  permissions: PermissionCatalogItem[]
+  menuRights: UserAccessRight[]
   existingLevels: UserAccessLevel[]
   onSave: (data: UserAccessLevel | Omit<UserAccessLevel, 'id'>) => void
 }
 
-function AccessLevelDrawer({ open, onClose, level, permissions, existingLevels, onSave }: AccessLevelDrawerProps) {
+function AccessLevelDrawer({ open, onClose, level, menuRights, existingLevels, onSave }: AccessLevelDrawerProps) {
   const [form, setForm] = useState<Omit<UserAccessLevel, 'id'> & { id?: number }>({ ...emptyForm })
   const [allLevelsForDropdown, setAllLevelsForDropdown] = useState<UserAccessLevel[]>([])
 
@@ -48,18 +47,12 @@ function AccessLevelDrawer({ open, onClose, level, permissions, existingLevels, 
     ? form.allowedPermissions.split(',').map((s) => s.trim()).filter(Boolean)
     : []
 
-  const isSelected = (p: PermissionCatalogItem) =>
-    selectedValues.includes(String(p.id)) || selectedValues.includes(p.code)
+  const isSelected = (r: UserAccessRight) => selectedValues.includes(r.menuKey)
 
-  const togglePermission = (p: PermissionCatalogItem) => {
+  const toggleMenuKey = (r: UserAccessRight) => {
     const set = new Set(selectedValues)
-    const key = String(p.id)
-    if (set.has(key) || set.has(p.code)) {
-      set.delete(key)
-      set.delete(p.code)
-    } else {
-      set.add(key)
-    }
+    if (set.has(r.menuKey)) set.delete(r.menuKey)
+    else set.add(r.menuKey)
     setForm((f) => ({ ...f, allowedPermissions: Array.from(set).join(', ') }))
   }
 
@@ -136,41 +129,45 @@ function AccessLevelDrawer({ open, onClose, level, permissions, existingLevels, 
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>
-              Allowed Permissions
+              Allowed menu keys (User Access Rights)
             </label>
             <div
-              className="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-1.5"
+              className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-1.5"
               style={{ borderColor: '#E5E7EB', background: '#FAFBFC' }}
             >
-              {permissions.length === 0 ? (
+              {menuRights.length === 0 ? (
                 <p className="text-xs py-2" style={{ color: '#9CA3AF' }}>
-                  No permissions available. Add permissions in Profile Permissions first.
+                  No menu rights loaded. Configure catalog under Settings → User Access Rights.
                 </p>
               ) : (
-                permissions.map((p) => (
+                menuRights.map((r) => (
                   <label
-                    key={p.id}
-                    className="flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
+                    key={r.menuId}
+                    className="flex items-start gap-2 py-1.5 px-2 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
                   >
                     <input
                       type="checkbox"
-                      checked={isSelected(p)}
-                      onChange={() => togglePermission(p)}
-                      className="w-4 h-4 rounded cursor-pointer"
+                      checked={isSelected(r)}
+                      onChange={() => toggleMenuKey(r)}
+                      className="w-4 h-4 rounded cursor-pointer mt-0.5 shrink-0"
                       style={{ accentColor: '#37BBA2' }}
                     />
-                    <span className="text-sm" style={{ color: '#04304B' }}>
-                      {p.code}
-                    </span>
-                    <span className="text-[11px]" style={{ color: '#9CA3AF' }}>
-                      ({p.scope} · {p.tag})
+                    <span className="text-sm min-w-0" style={{ color: '#04304B' }}>
+                      <span className="font-mono text-xs">{r.menuKey}</span>
+                      {r.menuLabel ? (
+                        <span className="block text-[11px] mt-0.5" style={{ color: '#9CA3AF' }}>
+                          {r.menuLabel}
+                          {r.routePath ? ` · ${r.routePath}` : ''}
+                        </span>
+                      ) : null}
                     </span>
                   </label>
                 ))
               )}
             </div>
             <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
-              Select one or more permissions from Profile Permissions
+              Stored as comma-separated <code className="text-[11px]">menu_key</code> values in allowed permissions (backend field{' '}
+              <code className="text-[11px]">access_level_allowed_permissions</code>).
             </p>
           </div>
           <div>
@@ -211,7 +208,7 @@ function AccessLevelDrawer({ open, onClose, level, permissions, existingLevels, 
 
 export default function AdminUserAccessLevels() {
   const [levels, setLevels] = useState<UserAccessLevel[]>([])
-  const [permissions, setPermissions] = useState<PermissionCatalogItem[]>([])
+  const [menuRights, setMenuRights] = useState<UserAccessRight[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -220,7 +217,10 @@ export default function AdminUserAccessLevels() {
   const [pagination, setPagination] = useState<{ page: number; limit: number; total: number; totalPages: number } | null>(null)
 
   useEffect(() => {
-    listPermissionsCatalog().then(setPermissions).catch(() => setPermissions([]))
+    useraccessrightsApi
+      .list({ page: 1, limit: 500 })
+      .then((r) => setMenuRights(r.items.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))))
+      .catch(() => setMenuRights([]))
   }, [])
 
   const loadLevels = () => {
@@ -392,7 +392,7 @@ export default function AdminUserAccessLevels() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         level={editLevel}
-        permissions={permissions}
+        menuRights={menuRights}
         existingLevels={levels}
         onSave={handleSave}
       />

@@ -107,12 +107,12 @@ export function ProfileContent() {
     setEnrollError(null)
     try {
       const res = await mfaApi.enrollVerify(userAccountId, enrollToken, code)
-      setMfaEnabled(true)
-      auth.setUserMfaEnabled(true)
       if (res.backup_codes && res.backup_codes.length > 0) {
         setBackupCodes(res.backup_codes)
         setEnrollStep('backup')
       } else {
+        setMfaEnabled(true)
+        auth.setUserMfaEnabled(true)
         setEnrollOpen(false)
         setEnrollStep('qr')
       }
@@ -135,6 +135,8 @@ export function ProfileContent() {
   }
 
   const handleBackupCodesSaved = () => {
+    setMfaEnabled(true)
+    auth.setUserMfaEnabled(true)
     setEnrollOpen(false)
     setEnrollStep('qr')
     setBackupCodes([])

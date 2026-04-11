@@ -53,7 +53,7 @@ export const useraccesslevelsApi = {
 
   async getById(id: number): Promise<UserAccessLevel | null> {
     try {
-      const res = await apiClient.get<UserAccessLevelDto>(`/useraccesslevels/id/${id}`)
+      const res = await apiClient.get<UserAccessLevelDto>(`/useraccesslevels/${id}`)
       const d = res.data
       if (!d || typeof d !== 'object') return null
       return dtoToLevel(d as UserAccessLevelDto)
@@ -102,7 +102,7 @@ export const useraccesslevelsApi = {
       if (data.accessLevelCreatorId !== undefined) {
         body.access_level_creator_id = data.accessLevelCreatorId ?? 0
       }
-      const res = await apiClient.put<UserAccessLevelDto>(`/useraccesslevels/id/${id}`, body)
+      const res = await apiClient.put<UserAccessLevelDto>(`/useraccesslevels/${id}`, body)
       const d = res.data
       if (!d || typeof d !== 'object') return null
       return dtoToLevel(d as UserAccessLevelDto)

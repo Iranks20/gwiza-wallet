@@ -91,11 +91,11 @@ export function TwoFactorEnrollment({ onSuccess, required = false, compact = fal
     setEnrollError(null)
     try {
       const res = await mfaApi.enrollVerify(userAccountId, enrollToken, code)
-      auth.setUserMfaEnabled(true)
       if (res.backup_codes && res.backup_codes.length > 0) {
         setBackupCodes(res.backup_codes)
         setEnrollStep('backup')
       } else {
+        auth.setUserMfaEnabled(true)
         onSuccess()
       }
     } catch (e) {
@@ -117,6 +117,7 @@ export function TwoFactorEnrollment({ onSuccess, required = false, compact = fal
   }
 
   const handleBackupCodesSaved = () => {
+    auth.setUserMfaEnabled(true)
     onSuccess()
   }
 

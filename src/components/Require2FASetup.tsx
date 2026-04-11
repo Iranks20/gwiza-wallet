@@ -18,7 +18,7 @@ export default function Require2FASetup({ loginType, children }: Props) {
   const location = useLocation()
 
   if (!auth.isAuthenticated || !auth.user) {
-    const loginPath = loginType === 'admin' ? '/admin/login' : '/user/login'
+    const loginPath = `/auth?from=${loginType}`
     return <Navigate to={loginPath} state={{ from: location }} replace />
   }
 

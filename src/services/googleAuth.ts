@@ -2,6 +2,76 @@ import { API_CONFIG } from '@/config/environment'
 
 export type UserProfileType = 'opco' | 'global'
 
+export type MenuOption = {
+  id?: number
+  menuLabel: string
+  routePath: string | null
+  parentKey: string | null
+  sortOrder: number
+  menuKey: string
+  isGroup: boolean
+  onMenu?: string | null
+  css?: string | null
+  menuScope?: string | null
+}
+
+type MenuOptionDto = {
+  id?: number
+  menu_id?: number
+  menu_label?: string
+  route_path?: string | null
+  parent_key?: string | null
+  sort_order?: number
+  menu_key?: string
+  is_group?: boolean
+  on_menu?: string | null
+  css?: string | null
+  menu_scope?: string | null
+}
+
+function dtoToMenuOption(dto: MenuOptionDto): MenuOption | null {
+  const menuKey = String(dto.menu_key ?? '').trim()
+  const menuLabel = String(dto.menu_label ?? '').trim()
+  if (!menuKey || !menuLabel) return null
+  const sortOrderRaw = dto.sort_order
+  const sortOrder =
+    typeof sortOrderRaw === 'number' && Number.isFinite(sortOrderRaw) ? sortOrderRaw : 0
+  return {
+    id: dto.menu_id ?? dto.id,
+    menuLabel,
+    routePath: dto.route_path ?? null,
+    parentKey: dto.parent_key ?? null,
+    sortOrder,
+    menuKey,
+    isGroup: dto.is_group === true,
+    onMenu: dto.on_menu ?? null,
+    css: dto.css ?? null,
+    menuScope: dto.menu_scope ?? null,
+  }
+}
+
+export function parseMenuOptions(value: unknown): MenuOption[] {
+  if (value == null) return []
+  if (Array.isArray(value)) {
+    const items: MenuOption[] = []
+    value.forEach((v) => {
+      if (!v || typeof v !== 'object') return
+      const opt = dtoToMenuOption(v as MenuOptionDto)
+      if (opt) items.push(opt)
+    })
+    return items.sort((a, b) => a.sortOrder - b.sortOrder)
+  }
+  if (typeof value !== 'object') return []
+  const rec = value as Record<string, unknown>
+  const items: MenuOption[] = []
+  Object.values(rec).forEach((v) => {
+    if (!v || typeof v !== 'object') return
+    const opt = dtoToMenuOption(v as MenuOptionDto)
+    if (opt) items.push(opt)
+  })
+  return items.sort((a, b) => a.sortOrder - b.sortOrder)
+}
+
 export type GoogleBackendAuthPayload = {
   user: {
     user_account_id: string | number
@@ -13,6 +83,7 @@ export type GoogleBackendAuthPayload = {
     country_id?: number
     user_profile_type?: UserProfileType
   }
+  menu_options?: unknown
   access_token: string
   token_type: string
   expires_in: number
@@ -21,6 +92,7 @@ export type GoogleBackendAuthPayload = {
 
 export type GoogleAuthResult = {
   user: GoogleBackendAuthPayload['user']
+  menuOptions?: MenuOption[]
   access_token: string
   token_type: string
   expires_in: number
@@ -84,6 +156,7 @@ function parseVerifyResponse(data: unknown): GoogleAuthResult {
   }
   return {
     user: payload.user,
+    menuOptions: parseMenuOptions((payload as { menu_options?: unknown })?.menu_options),
     access_token: payload.access_token,
     token_type: payload.token_type ?? 'Bearer',
     expires_in: payload.expires_in ?? 0,

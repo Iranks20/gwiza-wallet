@@ -121,7 +121,7 @@ export default function UserLogin() {
 
         <p className="mt-5 text-center text-meta text-muted-foreground">
           Admin?{' '}
-          <Link to="/admin/login" className="text-foreground hover:underline font-medium">
+          <Link to="/auth?from=admin" className="text-foreground hover:underline font-medium">
             Go to admin login
           </Link>
         </p>

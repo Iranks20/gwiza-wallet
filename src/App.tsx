@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router'
 import UserLayout from './components/UserLayout'
 import AdminLayout from './components/AdminLayout'
-import AdminLogin from './screens/AdminLogin'
 import UserLogin from './screens/UserLogin'
 import AuthSplash from './screens/AuthSplash'
 import AuthCallback from './screens/AuthCallback'
@@ -17,6 +16,7 @@ import AdminCurrencies from './screens/AdminCurrencies'
 import AdminOperationTypes from './screens/AdminOperationTypes'
 import AdminPermissions from './screens/AdminPermissions'
 import AdminUserAccessLevels from './screens/AdminUserAccessLevels'
+import AdminUserAccessRights from './screens/AdminUserAccessRights'
 import AdminWallets from './screens/AdminWallets'
 import AdminWalletDetails from './screens/AdminWalletDetails'
 import AdminTransactionRegister from './screens/AdminTransactionRegister'
@@ -66,7 +66,6 @@ export default function App() {
       {/* Auth */}
       <Route path="/auth" element={<AuthSplash />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/user/login" element={<UserLogin />} />
       <Route path="/auth/forgot-password" element={<ForgotPassword />} />
       <Route path="/auth/reset-password" element={<ResetPassword />} />
@@ -101,6 +100,7 @@ export default function App() {
         <Route path="settings/transaction-operation-types" element={<AdminOperationTypes />} />
         <Route path="settings/profile-permissions" element={<AdminPermissions />} />
         <Route path="settings/user-access-levels" element={<AdminUserAccessLevels />} />
+        <Route path="settings/user-access-rights" element={<AdminUserAccessRights />} />
 
         <Route path="user-accounts" element={<AdminUserAccounts />} />
         <Route path="profile" element={<AdminProfile />} />
