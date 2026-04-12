@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { GoogleLogin } from '@react-oauth/google'
 import { FEATURE_FLAGS, GOOGLE_CONFIG } from '@/config/environment'
@@ -14,6 +14,8 @@ type Props = {
   disabled?: boolean
 }
 
+const DEFAULT_BUTTON_WIDTH_PX = 384
+
 export default function GoogleSignInButton({
   loginType = 'user',
   onSuccess,
@@ -25,6 +27,21 @@ export default function GoogleSignInButton({
   const navigate = useNavigate()
   const auth = useAuth()
   const [loading, setLoading] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [buttonWidthPx, setButtonWidthPx] = useState(DEFAULT_BUTTON_WIDTH_PX)
+
+  useLayoutEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const update = () => {
+      const w = Math.floor(el.getBoundingClientRect().width)
+      if (w > 0) setButtonWidthPx(w)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   if (!FEATURE_FLAGS.ENABLE_GOOGLE_AUTH || !GOOGLE_CONFIG.CLIENT_ID) {
     return null
@@ -77,22 +94,29 @@ export default function GoogleSignInButton({
 
   return (
     <div
-      className={`w-full mt-3 flex justify-center [&_.g_id_signin]:!w-full ${isDisabled ? 'pointer-events-none opacity-60' : ''}`}
+      className={`w-full mt-3 flex justify-center ${isDisabled ? 'pointer-events-none opacity-60' : ''}`}
     >
-      <GoogleLogin
-        onSuccess={handleSuccess}
-        onError={handleError}
-        useOneTap={false}
-        theme="outline"
-        size="large"
-        type="standard"
-        text={text}
-        shape="rectangular"
-        width="100%"
-        containerProps={{
-          style: { width: '100%' },
-        }}
-      />
+      <div
+        ref={containerRef}
+        className="w-full max-w-sm min-w-0 mx-auto [&_.g_id_signin]:!w-full"
+      >
+        <GoogleLogin
+          onSuccess={handleSuccess}
+          onError={handleError}
+          useOneTap={false}
+          theme="outline"
+          size="large"
+          type="standard"
+          text={text}
+          shape="rectangular"
+          logo_alignment="center"
+          width={buttonWidthPx}
+          containerProps={{
+            className: 'w-full',
+            style: { width: '100%', maxWidth: '100%' },
+          }}
+        />
+      </div>
     </div>
   )
 }
