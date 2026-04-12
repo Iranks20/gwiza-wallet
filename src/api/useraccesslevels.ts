@@ -19,13 +19,14 @@ export type UserAccessLevel = {
 }
 
 function dtoToLevel(d: UserAccessLevelDto): UserAccessLevel {
+  const cid = d.access_level_creator_id
   return {
     id: d.access_level_id,
     name: d.access_level_name,
     description: d.access_level_desc ?? '',
     allowedPermissions: d.access_level_allowed_permissions ?? '',
     status: d.access_level_status ?? 'active',
-    accessLevelCreatorId: d.access_level_creator_id ?? null,
+    accessLevelCreatorId: cid != null && cid > 0 ? cid : null,
   }
 }
 
@@ -78,11 +79,8 @@ export const useraccesslevelsApi = {
       access_level_allowed_permissions: data.allowedPermissions?.trim() || null,
       access_level_status: data.status ?? 'active',
     }
-    if (data.accessLevelCreatorId !== undefined && data.accessLevelCreatorId !== null && data.accessLevelCreatorId > 0) {
-      body.access_level_creator_id = data.accessLevelCreatorId
-    } else {
-      body.access_level_creator_id = 0
-    }
+    body.access_level_creator_id =
+      data.accessLevelCreatorId != null && data.accessLevelCreatorId > 0 ? data.accessLevelCreatorId : null
     const res = await apiClient.post<UserAccessLevelDto>('/useraccesslevels/', body)
     const d = res.data
     if (!d || typeof d !== 'object') throw new ApiError('Create did not return data', 200, res.resp_code, res.resp_msg, res.data)
@@ -100,7 +98,8 @@ export const useraccesslevelsApi = {
       if (data.allowedPermissions !== undefined) body.access_level_allowed_permissions = data.allowedPermissions.trim() || null
       if (data.status !== undefined) body.access_level_status = data.status
       if (data.accessLevelCreatorId !== undefined) {
-        body.access_level_creator_id = data.accessLevelCreatorId ?? 0
+        body.access_level_creator_id =
+          data.accessLevelCreatorId != null && data.accessLevelCreatorId > 0 ? data.accessLevelCreatorId : null
       }
       const res = await apiClient.put<UserAccessLevelDto>(`/useraccesslevels/${id}`, body)
       const d = res.data

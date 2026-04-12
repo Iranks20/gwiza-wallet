@@ -102,6 +102,10 @@ export default function App() {
         <Route path="settings/user-access-levels" element={<AdminUserAccessLevels />} />
         <Route path="settings/user-access-rights" element={<AdminUserAccessRights />} />
 
+        <Route path="access_management/user-access-rights" element={<AdminUserAccessRights />} />
+        <Route path="access_management/user_access_levels" element={<AdminUserAccessLevels />} />
+        <Route path="access_management/user_accounts" element={<AdminUserAccounts />} />
+
         <Route path="user-accounts" element={<AdminUserAccounts />} />
         <Route path="profile" element={<AdminProfile />} />
 

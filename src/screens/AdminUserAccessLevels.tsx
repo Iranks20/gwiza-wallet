@@ -48,7 +48,7 @@ const emptyForm: Omit<UserAccessLevel, 'id'> = {
   description: '',
   allowedPermissions: '',
   status: 'active',
-  accessLevelCreatorId: 0,
+  accessLevelCreatorId: null,
 }
 
 interface AccessLevelDrawerProps {
@@ -70,7 +70,7 @@ function AccessLevelDrawer({ open, onClose, level, menuRights, existingLevels, o
     if (level) {
       setForm({
         ...level,
-        accessLevelCreatorId: level.accessLevelCreatorId ?? 0,
+        accessLevelCreatorId: level.accessLevelCreatorId ?? null,
         allowedPermissions: normalizeStoredPermissionsToIds(level.allowedPermissions, menuRights),
       })
     } else {
@@ -137,12 +137,18 @@ function AccessLevelDrawer({ open, onClose, level, menuRights, existingLevels, o
               Create from (Access Level)
             </label>
             <select
-              value={form.accessLevelCreatorId ?? 0}
-              onChange={(e) => setForm((f) => ({ ...f, accessLevelCreatorId: Number(e.target.value) || 0 }))}
+              value={form.accessLevelCreatorId != null && form.accessLevelCreatorId > 0 ? form.accessLevelCreatorId : ''}
+              onChange={(e) => {
+                const v = e.target.value
+                setForm((f) => ({
+                  ...f,
+                  accessLevelCreatorId: v === '' ? null : Number(v),
+                }))
+              }}
               className="w-full px-3 py-2.5 border rounded-lg outline-none text-sm cursor-pointer"
               style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}
             >
-              <option value={0}>Select create from</option>
+              <option value="">Select create from</option>
               {creatorOptions.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.name}
@@ -304,7 +310,8 @@ export default function AdminUserAccessLevels() {
       if ('id' in data && data.id) {
         await useraccesslevelsApi.update(data.id, {
           ...data,
-          accessLevelCreatorId: data.accessLevelCreatorId ?? 0,
+          accessLevelCreatorId:
+            data.accessLevelCreatorId != null && data.accessLevelCreatorId > 0 ? data.accessLevelCreatorId : null,
         })
       } else {
         await useraccesslevelsApi.create({
@@ -312,7 +319,8 @@ export default function AdminUserAccessLevels() {
           description: data.description,
           allowedPermissions: data.allowedPermissions,
           status: data.status,
-          accessLevelCreatorId: data.accessLevelCreatorId ?? 0,
+          accessLevelCreatorId:
+            data.accessLevelCreatorId != null && data.accessLevelCreatorId > 0 ? data.accessLevelCreatorId : null,
         })
       }
       loadLevels()
