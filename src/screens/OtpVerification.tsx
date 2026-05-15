@@ -4,7 +4,7 @@ import { Link } from '@/lib'
 
 export default function OtpVerification() {
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#FAFBFC', fontFamily: "'Poppins', sans-serif" }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#FAFBFC' }}>
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border" style={{ borderColor: '#E5E7EB' }}>
         <h1 className="font-bold mb-2 text-center" style={{ color: '#04304B', fontSize: 20 }}>Enter Verification Code</h1>
         <p className="text-center mb-6" style={{ color: '#6B7280', fontSize: 14 }}>

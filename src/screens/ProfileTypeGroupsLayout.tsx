@@ -24,7 +24,7 @@ export default function ProfileTypeGroupsLayout() {
   const childContext = { ...context, countryId: countryId || context?.countryId, groupId: groupId || context?.groupId }
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <div className="mb-4 flex flex-wrap gap-2 border-b" style={{ borderColor: '#E5E7EB' }}>
         {subTabs.map(t => {
           const to = `${base}/${t.path}`

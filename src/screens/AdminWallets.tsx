@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react'
 import Components from '../components'
 import { Link } from '@/lib'
-import { Search, Filter, Eye, X, Plus, RotateCcw } from 'lucide-react'
+import { Search, Filter, Eye, X, Plus, RotateCcw, Loader2 } from 'lucide-react'
 import { listWallets, listCountries, listKycTiers, listProfileTypes, listProfileTypeGroups } from '@/services'
 import { createWallet, updateWallet } from '@/services/walletsService'
 import type { Wallet } from '@/api/wallets'
 import type { CreateWalletBody } from '@/api/wallets'
 import { ApiError } from '@/api/client'
+import { Table } from '@/components/ui/table'
 
 const LINKED_MSISDN_PATTERN = /^\+?[0-9]{8,16}$/
 const WALLET_CURRENCY_PATTERN = /^[A-Z]{3}$/
@@ -261,7 +262,7 @@ function WalletDrawer({ open, onClose, countries, kycTiers, profileTypes, onCrea
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-96 bg-white h-full shadow-2xl flex flex-col overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>Add Wallet</h2>
           <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg"><X size={18} /></button>
@@ -667,7 +668,7 @@ export default function AdminWallets() {
   }
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <Components.AdminPageHeader
         title="Wallets"
         subtitle="Search and manage wallet accounts across the platform"
@@ -804,14 +805,19 @@ export default function AdminWallets() {
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: '#E5E7EB', background: '#FAFBFC' }}>
           <span style={{ color: '#6B7280', fontSize: 13 }}>
-            {loading ? 'Loading...' : `${filtered.length} wallets found`}
+            {loading ? 'Loading wallets...' : `${filtered.length} wallets found`}
           </span>
         </div>
         {loading ? (
-          <div className="p-8 text-center" style={{ color: '#6B7280', fontSize: 14 }}>Loading wallets...</div>
+          <div className="p-8 text-center">
+            <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+              <Loader2 size={16} className="animate-spin" />
+              <span>Loading wallets...</span>
+            </div>
+          </div>
         ) : (
           <>
-            <table className="w-full">
+            <Table className="w-full min-w-max">
               <thead>
                 <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
                   {['Wallet ID', 'Account No', 'Member ID', 'MSISDN', 'Country', 'Currency', 'Balance', 'Profile Type', 'Status', 'Actions'].map(h => (
@@ -843,7 +849,7 @@ export default function AdminWallets() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </Table>
             {pagination && (
               <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: '#E5E7EB' }}>
                 <span style={{ color: '#9CA3AF', fontSize: 13 }}>

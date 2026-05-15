@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router'
 import Components from '../components'
 import { Link } from '@/lib'
-import { Plus, Edit2, Settings2, X, Power, PowerOff } from 'lucide-react'
+import { Plus, Edit2, Settings2, X, Power, PowerOff, Loader2 } from 'lucide-react'
 import type { ProfileTypeGroup } from '@/services/profileTypeGroupsService'
 import { listProfileTypeGroups, createProfileTypeGroup, updateProfileTypeGroup } from '@/services/profileTypeGroupsService'
 import { listCountries } from '@/services/countriesService'
@@ -11,6 +11,7 @@ import { listProfileTypes } from '@/services/profileTypesService'
 import { listKycTiers } from '@/services/kycTiersService'
 import { listCurrencies } from '@/services/currenciesService'
 import { ApiError } from '@/api/client'
+import { Table } from '@/components/ui/table'
 
 type ProfileTypeOption = { id: number; name: string }
 type KycTierOption = { id: number; name: string }
@@ -50,7 +51,7 @@ function GroupDrawer({ open, onClose, group, countryId, countryOptions, profileT
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-96 bg-white h-full shadow-2xl flex flex-col overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>{group ? 'Edit Profile Type Group' : 'Add Profile Type Group'}</h2>
           <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg"><X size={18} /></button>
@@ -184,7 +185,7 @@ export default function AdminProfileGroups({ country, countryId: countryIdProp, 
   const kycTierName = (id: number) => kycTierOptions.find(k => k.id === id)?.name ?? String(id)
 
   const content = (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       {embedded && profileTypesPath && (
         <div className="mb-4">
           <Link to={profileTypesPath} className="text-sm cursor-pointer" style={{ color: '#37BBA2' }}>← Back to Profile Types</Link>
@@ -200,9 +201,14 @@ export default function AdminProfileGroups({ country, countryId: countryIdProp, 
         </div>
       )}
       {error && <p className="mb-2 text-sm" style={{ color: '#B91C1C' }}>{error}</p>}
-      {loading && <p className="mb-2 text-sm" style={{ color: '#6B7280' }}>Loading profile type groups…</p>}
+      {loading && (
+        <div className="mb-2 inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+          <Loader2 size={16} className="animate-spin" />
+          <span>Loading profile type groups...</span>
+        </div>
+      )}
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
               {['Group Name', 'Country', 'Profile Type', 'KYC Tier', 'Currency', 'Default', 'Status', 'Date created', 'Actions'].map(h => (
@@ -226,18 +232,18 @@ export default function AdminProfileGroups({ country, countryId: countryIdProp, 
                     {configureBase && (
                       <Link to={`${configureBase}/${g.id}/permissions`} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer" style={{ background: '#E8F8F5', color: '#037F67' }}><Settings2 size={12} /> Configure</Link>
                     )}
-                    <button onClick={() => { setEditGroup(g); setDrawerOpen(true) }} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
+                    <button onClick={() => { setEditGroup(g); setDrawerOpen(true) }} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }} title="Edit profile type group" aria-label="Edit profile type group"><Edit2 size={14} /></button>
                     {g.status === 'active' ? (
-                      <button onClick={() => setDeactivateId(g.id)} className="p-1.5 rounded-lg hover:bg-red-50 cursor-pointer" style={{ color: '#F44336' }} title="Deactivate"><PowerOff size={14} /></button>
+                      <button onClick={() => setDeactivateId(g.id)} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-red-50 cursor-pointer" style={{ color: '#F44336' }} title="Deactivate profile type group" aria-label="Deactivate profile type group"><PowerOff size={14} /></button>
                     ) : (
-                      <button onClick={() => setActivateId(g.id)} className="p-1.5 rounded-lg hover:bg-green-50 cursor-pointer" style={{ color: '#4CAF50' }} title="Activate"><Power size={14} /></button>
+                      <button onClick={() => setActivateId(g.id)} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-green-50 cursor-pointer" style={{ color: '#4CAF50' }} title="Activate profile type group" aria-label="Activate profile type group"><Power size={14} /></button>
                     )}
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
       <GroupDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} group={editGroup} countryId={countryId} countryOptions={countryOptions} profileTypeOptions={profileTypeOptions} kycTierOptions={kycTierOptions} currencyOptions={currencyOptions} onSave={handleSave} />
       <Components.ConfirmModal open={deactivateId != null} title="Deactivate Profile Type Group?" message={<>Are you sure you want to deactivate this group?</>} onConfirm={handleDeactivate} onCancel={() => setDeactivateId(null)} />

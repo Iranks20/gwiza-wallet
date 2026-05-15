@@ -6,48 +6,25 @@ import { useNavigate } from 'react-router'
 import GoogleSignInButton from '@/components/GoogleSignInButton'
 import TwoFactorVerification from '@/components/TwoFactorVerification'
 import { useAuth } from '@/contexts/AuthContext'
-import type { GoogleAuthResult } from '@/services/googleAuth'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-
-const DEMO_EMAIL = 'admin@fintech.io'
-const DEMO_PASSWORD = 'Admin123!'
 
 export default function AuthSplash() {
   const navigate = useNavigate()
   const auth = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const show2FA = auth.pending2FA?.loginType === 'admin'
-  const [email, setEmail] = useState(DEMO_EMAIL)
-  const [password, setPassword] = useState(DEMO_PASSWORD)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [googleError, setGoogleError] = useState<string | null>(null)
+  const credentialsLoginEnabled = false
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setGoogleError(null)
-
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      const demoAuth: GoogleAuthResult = {
-        user: {
-          user_account_id: 'demo-admin',
-          email_address: email,
-          full_name: 'Demo Admin',
-          user_account_status: 'active',
-          access_level: 9,
-          mfa_enabled: true,
-        },
-        access_token: 'demo-token',
-        token_type: 'Bearer',
-        expires_in: 3600,
-        scope: 'openid email profile',
-      }
-      auth.setAuth(demoAuth)
-      navigate('/admin/dashboard')
-    } else {
-      setError('Invalid credentials. Use admin@fintech.io / Admin123!')
-    }
+    setError('Password login is currently disabled. Use Google sign-in to continue.')
   }
 
   const inputClass = "w-full px-3.5 py-3 border border-input rounded-lg text-body text-foreground bg-background placeholder:text-muted-foreground transition-all duration-150"
@@ -72,12 +49,12 @@ export default function AuthSplash() {
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
             <label className="block text-caption font-medium mb-1.5 text-foreground">Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} placeholder="admin@fintech.io" />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} />
           </div>
           <div>
             <label className="block text-caption font-medium mb-1.5 text-foreground">Password</label>
             <div className="relative">
-              <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} className={cn(inputClass, 'pr-10')} placeholder="••••••••" />
+              <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} className={cn(inputClass, 'pr-10')} />
               <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute inset-y-0 right-0 px-3 flex items-center text-muted-foreground hover:text-foreground cursor-pointer" aria-label={showPassword ? 'Hide password' : 'Show password'}>
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -92,7 +69,7 @@ export default function AuthSplash() {
             <Link to="/auth/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
           </div>
 
-          <Button type="submit" className="w-full py-3.5 text-body font-medium">
+          <Button type="submit" disabled={!credentialsLoginEnabled} className="w-full py-3.5 text-body font-medium disabled:cursor-not-allowed">
             Sign in
           </Button>
         </form>

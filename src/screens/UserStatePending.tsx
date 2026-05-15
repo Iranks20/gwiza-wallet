@@ -3,7 +3,7 @@ import React from 'react'
 
 export default function UserStatePending() {
   return (
-    <div className="h-full flex items-center justify-center" style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div className="h-full flex items-center justify-center">
       <div className="w-full max-w-sm text-center rounded-2xl border px-6 py-8" style={{ background: '#EFF6FF', borderColor: '#BFDBFE' }}>
         <p className="text-xs mb-1" style={{ color: '#1D4ED8' }}>Pending</p>
         <h1 className="font-bold mb-2" style={{ color: '#1D4ED8', fontSize: 20 }}>Transaction is processing</h1>

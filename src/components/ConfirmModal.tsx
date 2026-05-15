@@ -17,7 +17,7 @@ export default function ConfirmModal({ open, title, message, confirmLabel = 'Del
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div
         className="bg-white rounded-2xl p-6 w-full max-w-sm text-center"
-        style={{ fontFamily: "'Poppins', sans-serif", boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+        style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
       >
         <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#FEF2F2' }}>
           <Trash2 size={22} style={{ color: '#F44336' }} />

@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react'
 import Components from '../components'
-import { Search, Eye, X, Download, Edit2, Plus } from 'lucide-react'
+import { Search, Eye, X, Download, Edit2, Plus, Loader2 } from 'lucide-react'
 import { listTransactions, updateTransaction, createTransaction } from '@/services/transactionRegisterService'
 import type { TxnRegisterEntry } from '@/api/txnregister'
 import type { CreateTxnRegisterBody } from '@/api/txnregister'
@@ -10,6 +10,7 @@ import { listOperationTypes } from '@/services/operationTypesService'
 import { listTransactionRules } from '@/services/transactionRulesService'
 import { listTransactionChannels } from '@/services/transactionChannelsService'
 import { listCountries } from '@/services/countriesService'
+import { Table } from '@/components/ui/table'
 
 function formatAmount(amount: number, currency: string): string {
   return `${currency} ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -29,11 +30,11 @@ function TxnDetailModal({ txn, onClose }: { txn: TxnRegisterEntry; onClose: () =
   const net = txn.transactionAmount - txn.feeAmount
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg" style={{ fontFamily: "'Poppins', sans-serif", boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+      <div className="bg-white rounded-2xl w-full max-w-lg" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <div>
             <h2 className="font-bold" style={{ color: '#04304B', fontSize: 18 }}>Transaction Detail</h2>
-            <p style={{ color: '#9CA3AF', fontSize: 13 }}>TXN-{txn.transactionId}</p>
+            <p style={{ color: '#6B7280', fontSize: 13 }}>TXN-{txn.transactionId}</p>
           </div>
           <div className="flex items-center gap-3">
             <Components.StatusBadge status={txn.txnStatus} />
@@ -57,7 +58,7 @@ function TxnDetailModal({ txn, onClose }: { txn: TxnRegisterEntry; onClose: () =
               ['Date & Time', formatDate(txn.transactionDate)],
             ].map(([k, v], i) => (
               <div key={i} className="flex items-center justify-between py-2 border-b" style={{ borderColor: '#F3F4F6' }}>
-                <span style={{ color: '#9CA3AF', fontSize: 13 }}>{k}</span>
+                <span style={{ color: '#6B7280', fontSize: 13 }}>{k}</span>
                 <span className="font-medium text-right max-w-[60%]" style={{ color: '#04304B', fontSize: 13 }}>{v}</span>
               </div>
             ))}
@@ -114,7 +115,7 @@ function EditTxnDrawer({
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-96 bg-white h-full shadow-2xl flex flex-col overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>Edit Transaction</h2>
           <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg"><X size={18} /></button>
@@ -370,7 +371,7 @@ function AddTransactionDrawer({ open, onClose, onCreated }: AddTxnDrawerProps) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-[28rem] max-w-[95vw] bg-white h-full shadow-2xl flex flex-col overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-[28rem] max-w-[95vw] bg-white h-full shadow-2xl flex flex-col overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>Add Transaction</h2>
           <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg"><X size={18} /></button>
@@ -709,7 +710,7 @@ export default function AdminTransactionRegister() {
   }
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <Components.AdminPageHeader
         title="Transaction Register"
         subtitle="Full ledger of all platform transactions"
@@ -719,7 +720,7 @@ export default function AdminTransactionRegister() {
 
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6B7280' }} />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -758,7 +759,7 @@ export default function AdminTransactionRegister() {
           <label style={{ color: '#6B7280', fontSize: 13 }}>To</label>
           <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1) }} className="px-3 py-2 border rounded-lg text-sm outline-none cursor-pointer" style={{ borderColor: '#E5E7EB', fontSize: 13 }} />
         </div>
-        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{loading ? '...' : `${filtered.length} results`}</span>
+        <span style={{ color: '#6B7280', fontSize: 13 }}>{loading ? 'Loading transactions...' : `${filtered.length} results`}</span>
       </div>
 
       {error && (
@@ -766,7 +767,7 @@ export default function AdminTransactionRegister() {
       )}
 
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
               {['Txn ID', 'Type', 'Channel', 'Source', 'Destination', 'Amount', 'Fee', 'Status', 'Date', ''].map(h => (
@@ -776,7 +777,14 @@ export default function AdminTransactionRegister() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={10} className="px-4 py-8 text-center" style={{ color: '#6B7280', fontSize: 14 }}>Loading transactions...</td></tr>
+              <tr>
+                <td colSpan={10} className="px-4 py-8 text-center">
+                  <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Loading transactions...</span>
+                  </div>
+                </td>
+              </tr>
             ) : (
               filtered.map(t => (
                 <tr key={t.transactionId} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
@@ -786,23 +794,23 @@ export default function AdminTransactionRegister() {
                   <td className="px-4 py-3"><span className="font-mono" style={{ color: '#04304B', fontSize: 11 }}>W{t.srcWalletId}</span></td>
                   <td className="px-4 py-3"><span className="font-mono" style={{ color: '#04304B', fontSize: 11 }}>{t.destWalletId != null ? `W${t.destWalletId}` : '—'}</span></td>
                   <td className="px-4 py-3"><span className="font-semibold" style={{ color: '#04304B', fontSize: 12 }}>{formatAmount(t.transactionAmount, t.currencyCode)}</span></td>
-                  <td className="px-4 py-3"><span style={{ color: '#9CA3AF', fontSize: 12 }}>{formatAmount(t.feeAmount, t.currencyCode)}</span></td>
+                  <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{formatAmount(t.feeAmount, t.currencyCode)}</span></td>
                   <td className="px-4 py-3"><Components.StatusBadge status={t.txnStatus} size="sm" /></td>
-                  <td className="px-4 py-3"><span style={{ color: '#9CA3AF', fontSize: 11 }}>{formatDate(t.transactionDate)}</span></td>
+                  <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{formatDate(t.transactionDate)}</span></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
-                      <button onClick={() => handleViewDetail(t)} className="p-1.5 hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }}><Eye size={14} /></button>
-                      <button onClick={() => setEditingTxn(t)} className="p-1.5 hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
+                      <button onClick={() => handleViewDetail(t)} className="w-11 h-11 inline-flex items-center justify-center hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }} title="View transaction details" aria-label="View transaction details"><Eye size={14} /></button>
+                      <button onClick={() => setEditingTxn(t)} className="w-11 h-11 inline-flex items-center justify-center hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }} title="Edit transaction" aria-label="Edit transaction"><Edit2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
-        </table>
+        </Table>
         {pagination && !loading && (
           <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: '#E5E7EB' }}>
-            <span style={{ color: '#9CA3AF', fontSize: 13 }}>
+            <span style={{ color: '#6B7280', fontSize: 13 }}>
               Showing {(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
             </span>
             <div className="flex gap-1">

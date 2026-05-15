@@ -2,6 +2,7 @@
 import React from 'react'
 import { Link } from '@/lib'
 import Components from '../components'
+import { Table } from '@/components/ui/table'
 
 const wallets = [
   { id: 'WLT-001', currency: 'KES', balance: '45,200.00', ledgerBalance: '45,200.00', status: 'active' },
@@ -10,11 +11,11 @@ const wallets = [
 
 export default function UserWallets() {
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <h1 className="font-semibold mb-3" style={{ color: '#04304B', fontSize: 18 }}>My Wallets</h1>
 
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
               {['Wallet ID', 'Currency', 'Balance', 'Ledger Balance', 'Status', 'Actions'].map(h => (
@@ -38,7 +39,7 @@ export default function UserWallets() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
     </div>
   )

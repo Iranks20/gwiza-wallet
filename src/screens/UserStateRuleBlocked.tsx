@@ -3,7 +3,7 @@ import React from 'react'
 
 export default function UserStateRuleBlocked() {
   return (
-    <div className="h-full flex items-center justify-center" style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div className="h-full flex items-center justify-center">
       <div className="w-full max-w-sm text-center rounded-2xl border px-6 py-8" style={{ background: '#FEF2F2', borderColor: '#FCA5A5' }}>
         <p className="text-xs mb-1" style={{ color: '#B91C1C' }}>Transaction blocked</p>
         <h1 className="font-bold mb-2" style={{ color: '#B91C1C', fontSize: 20 }}>Blocked by platform rules</h1>

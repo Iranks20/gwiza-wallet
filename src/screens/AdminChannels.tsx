@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router'
 import Components from '../components'
-import { Plus, Edit2, X, Power, PowerOff, Search, Smartphone, CreditCard, Building, ArrowLeft } from 'lucide-react'
+import { Plus, Edit2, X, Power, PowerOff, Search, Smartphone, CreditCard, Building, ArrowLeft, Loader2 } from 'lucide-react'
 import type { TxnChannel } from '@/services/transactionChannelsService'
 import { listTransactionChannels, createTransactionChannel, updateTransactionChannel, TXN_CHANNEL_TYPE_ENUM } from '@/services/transactionChannelsService'
 import { listCountries } from '@/services/countriesService'
 import { listCurrencies } from '@/services/currenciesService'
 import { ApiError } from '@/api/client'
+import { Table } from '@/components/ui/table'
 
 const typeIcon = (t: string) => {
   if (t === 'mobile' || t === 'agent') return <Smartphone size={13} />
@@ -58,7 +59,7 @@ function ChannelDrawer({ open, onClose, channel, countryId, countryOptions, curr
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-full max-w-md bg-white h-full flex flex-col shadow-2xl" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full flex flex-col shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-bold" style={{ color: '#04304B', fontSize: 18 }}>{channel ? 'Edit Channel' : 'Add Channel'}</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={18} /></button>
@@ -187,7 +188,7 @@ export default function AdminChannels({ country, countryId: countryIdProp, embed
   })
 
   const content = (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       {embedded && configureBase && (
         <div className="mb-4">
           <Link to={configureBase} className="inline-flex items-center gap-2 text-sm font-medium" style={{ color: '#37BBA2' }}>
@@ -205,10 +206,15 @@ export default function AdminChannels({ country, countryId: countryIdProp, embed
         </div>
       )}
       {error && <p className="mb-2 text-sm" style={{ color: '#B91C1C' }}>{error}</p>}
-      {loading && <p className="mb-2 text-sm" style={{ color: '#6B7280' }}>Loading transaction channels…</p>}
+      {loading && (
+        <div className="mb-2 inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+          <Loader2 size={16} className="animate-spin" />
+          <span>Loading transaction channels...</span>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6B7280' }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search channels..." className="pl-9 pr-4 py-2.5 border rounded-xl text-sm outline-none w-56" style={{ borderColor: '#E5E7EB', fontSize: 13 }} />
         </div>
         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-3 py-2.5 border rounded-xl text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }}>
@@ -220,10 +226,10 @@ export default function AdminChannels({ country, countryId: countryIdProp, embed
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{filtered.length} channels</span>
+        <span style={{ color: '#6B7280', fontSize: 13 }}>{filtered.length} channels</span>
       </div>
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
               {['Name', 'Display Name', 'Type', 'Country', 'Currency', 'Status', 'Actions'].map(h => (
@@ -246,11 +252,11 @@ export default function AdminChannels({ country, countryId: countryIdProp, embed
                   <td className="px-5 py-3"><Components.StatusBadge status={c.status} size="sm" /></td>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => { setEditChannel(c); setDrawerOpen(true) }} className="p-1.5 hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
+                      <button onClick={() => { setEditChannel(c); setDrawerOpen(true) }} className="w-11 h-11 inline-flex items-center justify-center hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }} title="Edit channel" aria-label="Edit channel"><Edit2 size={14} /></button>
                       {c.status === 'active' ? (
-                        <button onClick={() => setDeactivateId(c.id)} className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer" style={{ color: '#F44336' }} title="Deactivate"><PowerOff size={14} /></button>
+                        <button onClick={() => setDeactivateId(c.id)} className="w-11 h-11 inline-flex items-center justify-center hover:bg-red-50 rounded-lg cursor-pointer" style={{ color: '#F44336' }} title="Deactivate channel" aria-label="Deactivate channel"><PowerOff size={14} /></button>
                       ) : (
-                        <button onClick={() => setActivateId(c.id)} className="p-1.5 hover:bg-green-50 rounded-lg cursor-pointer" style={{ color: '#4CAF50' }} title="Activate"><Power size={14} /></button>
+                        <button onClick={() => setActivateId(c.id)} className="w-11 h-11 inline-flex items-center justify-center hover:bg-green-50 rounded-lg cursor-pointer" style={{ color: '#4CAF50' }} title="Activate channel" aria-label="Activate channel"><Power size={14} /></button>
                       )}
                     </div>
                   </td>
@@ -258,7 +264,7 @@ export default function AdminChannels({ country, countryId: countryIdProp, embed
               )
             })}
           </tbody>
-        </table>
+        </Table>
       </div>
       <ChannelDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} channel={editChannel} countryId={countryId} countryOptions={countryOptions} currencyOptions={currencyOptions} onSave={handleSave} />
       <Components.ConfirmModal open={deactivateId != null} title="Deactivate Channel?" message={<>Are you sure you want to deactivate this channel?</>} onConfirm={handleDeactivate} onCancel={() => setDeactivateId(null)} />

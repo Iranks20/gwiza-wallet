@@ -1,9 +1,10 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react'
 import Components from '../components'
-import { Eye, X } from 'lucide-react'
+import { Eye, X, Loader2 } from 'lucide-react'
 import { listFeesLedgerEntries } from '@/services/feesLedgerService'
 import type { TxnFeesLedgerEntry } from '@/services/feesLedgerService'
+import { Table } from '@/components/ui/table'
 
 function formatAmount(amount: number, currency: string): string {
   return `${currency} ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -22,7 +23,7 @@ function formatDate(s: string | null): string {
 function FeeDetailModal({ fee, onClose }: { fee: TxnFeesLedgerEntry; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md" style={{ fontFamily: "'Poppins', sans-serif", boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+      <div className="bg-white rounded-2xl w-full max-w-md" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-bold" style={{ color: '#04304B', fontSize: 18 }}>Fee Entry Detail</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={18} /></button>
@@ -38,7 +39,7 @@ function FeeDetailModal({ fee, onClose }: { fee: TxnFeesLedgerEntry; onClose: ()
               ['Date', formatDate(fee.entryDate)],
             ].map(([k, v], i) => (
             <div key={i} className="flex justify-between items-center py-2 border-b" style={{ borderColor: '#F3F4F6' }}>
-              <span style={{ color: '#9CA3AF', fontSize: 13 }}>{k}</span>
+              <span style={{ color: '#6B7280', fontSize: 13 }}>{k}</span>
                 {k === 'Status' ? <Components.StatusBadge status={fee.status} size="sm" /> : <span className="font-medium" style={{ color: '#04304B', fontSize: 13 }}>{String(v)}</span>}
             </div>
           ))}
@@ -108,7 +109,7 @@ export default function AdminFeesLedger() {
   }, [entries])
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <Components.AdminPageHeader
         title="Fees Ledger"
         subtitle="Accounting view of all fees charged and settled"
@@ -125,7 +126,7 @@ export default function AdminFeesLedger() {
           <option value="completed">Completed</option>
           <option value="pending">Pending</option>
         </select>
-        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{loading ? '...' : `${filtered.length} results`}</span>
+        <span style={{ color: '#6B7280', fontSize: 13 }}>{loading ? 'Loading fees ledger...' : `${filtered.length} results`}</span>
       </div>
 
       {error && (
@@ -133,7 +134,7 @@ export default function AdminFeesLedger() {
       )}
 
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
               {['Entry ID', 'Txn ID', 'Charged Wallet', 'Credited Wallet', 'Amount', 'Status', 'Date', ''].map(h => (
@@ -144,7 +145,12 @@ export default function AdminFeesLedger() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center" style={{ color: '#6B7280', fontSize: 14 }}>Loading fees ledger...</td>
+                <td colSpan={8} className="px-4 py-8 text-center">
+                  <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Loading fees ledger...</span>
+                  </div>
+                </td>
               </tr>
             ) : (
               filtered.map(r => (
@@ -155,18 +161,18 @@ export default function AdminFeesLedger() {
                   <td className="px-4 py-3"><span style={{ color: '#04304B', fontSize: 12 }}>{r.creditedWalletId}</span></td>
                   <td className="px-4 py-3"><span style={{ color: '#F44336', fontSize: 13 }}>{formatAmount(r.feeAmount, r.currencyCode)}</span></td>
                   <td className="px-4 py-3"><Components.StatusBadge status={r.status} size="sm" /></td>
-                  <td className="px-4 py-3"><span style={{ color: '#9CA3AF', fontSize: 11 }}>{formatDate(r.entryDate)}</span></td>
+                  <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{formatDate(r.entryDate)}</span></td>
                   <td className="px-4 py-3">
-                    <button onClick={() => setSelectedFee(r)} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }} title="View details"><Eye size={14} /></button>
+                    <button onClick={() => setSelectedFee(r)} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }} title="View details" aria-label="View fee details"><Eye size={14} /></button>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
-        </table>
+        </Table>
         {pagination && !loading && (
           <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: '#E5E7EB' }}>
-            <span style={{ color: '#9CA3AF', fontSize: 13 }}>
+            <span style={{ color: '#6B7280', fontSize: 13 }}>
               Showing {(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
             </span>
             <div className="flex gap-1">

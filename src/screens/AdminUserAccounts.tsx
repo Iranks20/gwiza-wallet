@@ -1,12 +1,15 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react'
 import Components from '../components'
-import { Search, Edit2, X } from 'lucide-react'
+import { Search, Edit2, X, Loader2 } from 'lucide-react'
 import { listUserAccounts, updateUserAccount } from '@/services/userAccountsService'
 import type { UserAccount } from '@/services/userAccountsService'
 import { useraccesslevelsApi, type UserAccessLevel } from '@/api/useraccesslevels'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Table } from '@/components/ui/table'
 
 function formatDateTime(s: string | null): string {
   if (!s) return '—'
@@ -18,9 +21,6 @@ function formatDateTime(s: string | null): string {
     return s
   }
 }
-
-const inputClass = "w-full px-3.5 py-2.5 border border-input rounded-lg text-body text-foreground bg-background placeholder:text-muted-foreground transition-all duration-150"
-const selectClass = "w-full px-3.5 py-2.5 border border-input rounded-lg text-body text-foreground bg-background cursor-pointer transition-all duration-150"
 
 interface EditUserDrawerProps {
   open: boolean
@@ -57,7 +57,7 @@ function EditUserDrawer({ open, onClose, user, accessLevels, onSave }: EditUserD
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-96 bg-card h-full shadow-2xl flex flex-col">
+      <div className="w-full max-w-md bg-card h-full shadow-2xl flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="text-section text-foreground">
             Edit User Account
@@ -78,36 +78,42 @@ function EditUserDrawer({ open, onClose, user, accessLevels, onSave }: EditUserD
             <label className="block text-caption font-medium mb-1.5 text-foreground">
               Access Level
             </label>
-            <select
-              value={accessLevel}
-              onChange={(e) => setAccessLevel(Number(e.target.value))}
-              className={selectClass}
+            <Select
+              value={String(accessLevel)}
+              onValueChange={(v) => setAccessLevel(Number(v))}
             >
-              {accessLevels.length === 0 ? (
-                <option value={user.accessLevel}>Level {user.accessLevel}</option>
-              ) : (
-                accessLevels.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))
-              )}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {accessLevels.length === 0 ? (
+                  <SelectItem value={String(user.accessLevel)}>Level {user.accessLevel}</SelectItem>
+                ) : (
+                  accessLevels.map((l) => (
+                    <SelectItem key={l.id} value={String(l.id)}>{l.name}</SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-caption font-medium mb-1.5 text-foreground">
               Status
             </label>
-            <select
+            <Select
               value={status}
-              onChange={(e) => setStatus(e.target.value as UserAccount['status'])}
-              className={selectClass}
+              onValueChange={(v) => setStatus(v as UserAccount['status'])}
             >
-              <option value="new">New</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="new">New</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="suspended">Suspended</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="p-6 border-t border-border flex gap-3">
@@ -229,26 +235,31 @@ export default function AdminUserAccounts() {
       <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-4 mb-6">
         <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <input
+          <Input
+            type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by ID, email, or name…"
-            className={cn(inputClass, 'pl-9')}
+            className={cn('pl-9')}
           />
         </div>
         <div className="w-full sm:w-40">
           <label className="block text-meta font-medium mb-1.5 text-muted-foreground">Status</label>
-          <select
+          <Select
             value={statusFilter}
-            onChange={e => { setStatusFilter(e.target.value as typeof statusFilter); setPage(1) }}
-            className={selectClass}
+            onValueChange={(v) => { setStatusFilter(v as typeof statusFilter); setPage(1) }}
           >
-            <option value="all">All</option>
-            <option value="new">New</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="suspended">Suspended</option>
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="new">New</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <Button variant="outline" onClick={resetFilters} className="shrink-0">
           Reset filters
@@ -258,11 +269,11 @@ export default function AdminUserAccounts() {
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="px-5 sm:px-6 py-4 border-b border-border bg-muted/30">
           <span className="text-caption text-muted-foreground">
-            {loading ? 'Loading...' : `${filtered.length} users${pagination?.total ? ` · ${pagination.total} total` : ''}`}
+            {loading ? 'Loading users...' : `${filtered.length} users${pagination?.total ? ` · ${pagination.total} total` : ''}`}
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px]">
+        <div>
+          <Table className="min-w-[640px]">
             <thead>
               <tr className="border-b border-border">
                 {['ID', 'Name', 'Email', 'Auth', 'Access', 'Status', 'Last login', 'Actions'].map(h => (
@@ -273,7 +284,12 @@ export default function AdminUserAccounts() {
             <tbody>
               {              loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground text-body">Loading users…</td>
+                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground text-body">
+                    <span className="inline-flex items-center gap-2">
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Loading users...</span>
+                    </span>
+                  </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
@@ -294,7 +310,7 @@ export default function AdminUserAccounts() {
                       <td className="px-5 py-4">
                         <button
                           onClick={() => { setEditUser(u); setEditDrawerOpen(true) }}
-                          className="p-1.5 rounded-lg hover:bg-primary-muted cursor-pointer text-primary"
+                          className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-primary-muted cursor-pointer text-primary"
                           title="Edit user"
                           aria-label="Edit user"
                         >
@@ -306,7 +322,7 @@ export default function AdminUserAccounts() {
               })
             )}
             </tbody>
-          </table>
+          </Table>
         </div>
         {pagination && pagination.totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-5 py-3 border-t border-border">

@@ -11,7 +11,7 @@ export default function UserTransactionDetails() {
   const t = stub
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <div className="mb-4 flex items-center gap-2">
         <Link to="/user/transactions" className="text-sm cursor-pointer" style={{ color: '#37BBA2' }}>← Transaction History</Link>
       </div>

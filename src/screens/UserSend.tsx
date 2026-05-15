@@ -6,7 +6,7 @@ export default function UserSend() {
   const [amount, setAmount] = useState('0')
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <h1 className="font-semibold mb-3" style={{ color: '#04304B', fontSize: 18 }}>Send money</h1>
       <div className="space-y-4">
         <div>

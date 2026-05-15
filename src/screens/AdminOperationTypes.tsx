@@ -1,9 +1,10 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import Components from '../components'
-import { Plus, Edit2, Trash2, X, Search, ArrowUp, ArrowDown, ArrowLeftRight } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Search, ArrowUp, ArrowDown, ArrowLeftRight, Loader2 } from 'lucide-react'
 import type { OperationType } from '@/services/operationTypesService'
 import { listOperationTypes, createOperationType, updateOperationType, removeOperationType } from '@/services/operationTypesService'
+import { Table } from '@/components/ui/table'
 
 const DIRECTION_OPTIONS: { value: string; label: string }[] = [
   { value: 'on_us', label: 'On us' },
@@ -39,7 +40,7 @@ function OpTypeDrawer({
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-full max-w-md bg-white h-full flex flex-col shadow-2xl" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full flex flex-col shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-bold" style={{ color: '#04304B', fontSize: 18 }}>{isEdit ? 'Edit Operation Type' : 'Add Operation Type'}</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={18} /></button>
@@ -145,7 +146,7 @@ export default function AdminOperationTypes() {
   }
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <Components.AdminPageHeader
         title="Transaction Operation Types"
         subtitle="Define and manage transaction operation types"
@@ -182,9 +183,9 @@ export default function AdminOperationTypes() {
 
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <div className="px-5 py-3 border-b" style={{ borderColor: '#E5E7EB', background: '#FAFBFC' }}>
-          <span style={{ color: '#6B7280', fontSize: 13 }}>{loading ? 'Loading...' : `${filtered.length} operation types`}</span>
+          <span style={{ color: '#6B7280', fontSize: 13 }}>{loading ? 'Loading operation types...' : `${filtered.length} operation types`}</span>
         </div>
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
               {['Name', 'Description', 'Direction', 'Tag', 'Status', 'Date Created', 'Actions'].map(h => (
@@ -194,7 +195,14 @@ export default function AdminOperationTypes() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="px-5 py-8 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</td></tr>
+              <tr>
+                <td colSpan={7} className="px-5 py-8 text-center">
+                  <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Loading operation types...</span>
+                  </div>
+                </td>
+              </tr>
             ) : (
               filtered.map(o => {
                 const dc = directionColor(o.direction)
@@ -213,8 +221,8 @@ export default function AdminOperationTypes() {
                     <td className="px-5 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{dateStr}</span></td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => setDrawer({ open: true, item: o })} className="p-1.5 hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
-                        <button onClick={() => setDeleteId(typeof o.id === 'string' ? parseInt(o.id, 10) : o.id)} className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer" style={{ color: '#F44336' }}><Trash2 size={14} /></button>
+                        <button onClick={() => setDrawer({ open: true, item: o })} className="w-11 h-11 inline-flex items-center justify-center hover:bg-teal-50 rounded-lg cursor-pointer" style={{ color: '#37BBA2' }} title="Edit operation type" aria-label="Edit operation type"><Edit2 size={14} /></button>
+                        <button onClick={() => setDeleteId(typeof o.id === 'string' ? parseInt(o.id, 10) : o.id)} className="w-11 h-11 inline-flex items-center justify-center hover:bg-red-50 rounded-lg cursor-pointer" style={{ color: '#F44336' }} title="Delete operation type" aria-label="Delete operation type"><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
@@ -222,7 +230,7 @@ export default function AdminOperationTypes() {
               })
             )}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {drawer.open && <OpTypeDrawer item={drawer.item} isEdit={!!drawer.item} onClose={() => setDrawer({ open: false })} onSave={handleSave} />}

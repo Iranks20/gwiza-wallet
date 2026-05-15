@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router'
 import Components from '../components'
-import { Plus, Edit2, X, Power, PowerOff, ArrowLeft } from 'lucide-react'
+import { Plus, Edit2, X, Power, PowerOff, ArrowLeft, Loader2 } from 'lucide-react'
 import type { SystemAccount } from '@/services/systemAccountsService'
 import { listSystemAccounts, createSystemAccount, updateSystemAccount } from '@/services/systemAccountsService'
 import { listCountries } from '@/services/countriesService'
 import { listCurrencies } from '@/services/currenciesService'
 import { ApiError } from '@/api/client'
+import { Table } from '@/components/ui/table'
 
 type CountryOption = { id: number; name: string }
 
@@ -42,7 +43,7 @@ function SystemAccountDrawer({ open, onClose, account, countryId, countryOptions
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-96 bg-white h-full shadow-2xl flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>{account ? 'Edit System Account' : 'Add System Account'}</h2>
           <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg"><X size={18} /></button>
@@ -155,7 +156,7 @@ export default function AdminSystemAccounts({ country, countryId: countryIdProp,
   const countryName = (id: number) => countryOptions.find(c => c.id === id)?.name ?? String(id)
 
   const content = (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       {embedded && configureBase && (
         <div className="mb-4">
           <Link to={configureBase} className="inline-flex items-center gap-2 text-sm font-medium" style={{ color: '#37BBA2' }}>
@@ -173,17 +174,22 @@ export default function AdminSystemAccounts({ country, countryId: countryIdProp,
         </div>
       )}
       {error && <p className="mb-2 text-sm" style={{ color: '#B91C1C' }}>{error}</p>}
-      {loading && <p className="mb-2 text-sm" style={{ color: '#6B7280' }}>Loading system accounts…</p>}
+      {loading && (
+        <div className="mb-2 inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+          <Loader2 size={16} className="animate-spin" />
+          <span>Loading system accounts...</span>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2.5 border rounded-xl text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}>
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{accounts.length} accounts</span>
+        <span style={{ color: '#6B7280', fontSize: 13 }}>{accounts.length} accounts</span>
       </div>
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
               {['ID', 'Name', 'Description', 'Country', 'Currency', 'Wallet ID', 'Status', 'Date created', 'Actions'].map(h => (
@@ -204,18 +210,18 @@ export default function AdminSystemAccounts({ country, countryId: countryIdProp,
                 <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 13 }}>{r.dateCreated ? new Date(r.dateCreated).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</span></td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <button onClick={() => { setEditAccount(r); setDrawerOpen(true) }} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
+                    <button onClick={() => { setEditAccount(r); setDrawerOpen(true) }} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }} title="Edit system account" aria-label="Edit system account"><Edit2 size={14} /></button>
                     {r.status === 'active' ? (
-                      <button onClick={() => setDeactivateId(r.id)} className="p-1.5 rounded-lg hover:bg-red-50 cursor-pointer" style={{ color: '#F44336' }} title="Deactivate"><PowerOff size={14} /></button>
+                      <button onClick={() => setDeactivateId(r.id)} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-red-50 cursor-pointer" style={{ color: '#F44336' }} title="Deactivate system account" aria-label="Deactivate system account"><PowerOff size={14} /></button>
                     ) : (
-                      <button onClick={() => setActivateId(r.id)} className="p-1.5 rounded-lg hover:bg-green-50 cursor-pointer" style={{ color: '#4CAF50' }} title="Activate"><Power size={14} /></button>
+                      <button onClick={() => setActivateId(r.id)} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-green-50 cursor-pointer" style={{ color: '#4CAF50' }} title="Activate system account" aria-label="Activate system account"><Power size={14} /></button>
                     )}
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
       <SystemAccountDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} account={editAccount} countryId={countryId} countryOptions={countryOptions} currencyOptions={currencyOptions} onSave={handleSave} />
       <Components.ConfirmModal open={deactivateId != null} title="Deactivate System Account?" message={<>Are you sure you want to deactivate this account?</>} confirmLabel="Deactivate" onConfirm={handleDeactivate} onCancel={() => setDeactivateId(null)} />

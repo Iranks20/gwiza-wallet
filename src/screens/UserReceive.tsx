@@ -7,7 +7,7 @@ export default function UserReceive() {
   const accountNo = 'ACC-8821029'
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <h1 className="font-semibold mb-3" style={{ color: '#04304B', fontSize: 18 }}>Receive money</h1>
 
       <div className="rounded-xl border p-4 mb-4" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>

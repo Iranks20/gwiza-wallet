@@ -2,6 +2,7 @@
 import React from 'react'
 import Components from '../components'
 import { CheckCircle2, AlertTriangle, Activity } from 'lucide-react'
+import { Table } from '@/components/ui/table'
 
 const checks = [
   { name: 'API Health', status: 'healthy', detail: 'All public and internal APIs responding within SLA', latency: '120ms' },
@@ -12,7 +13,7 @@ const checks = [
 
 export default function AdminHealth() {
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <Components.AdminPageHeader
         title="Health"
         subtitle="Operational overview of core services — status indicator and raw response (stub)"
@@ -50,7 +51,7 @@ export default function AdminHealth() {
             <Activity size={16} style={{ color: '#37BBA2' }} />
             <span className="font-medium" style={{ color: '#04304B', fontSize: 14 }}>Health Checks</span>
           </div>
-          <table className="w-full">
+          <Table className="min-w-max">
             <thead>
               <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
                 {['Check', 'Status', 'Detail', 'Latency'].map(h => (
@@ -76,7 +77,7 @@ export default function AdminHealth() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
 
       <div className="rounded-xl border p-5 mt-4" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>

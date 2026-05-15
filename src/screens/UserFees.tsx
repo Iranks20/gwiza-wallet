@@ -4,7 +4,7 @@ import { Link } from '@/lib'
 
 export default function UserFees() {
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <h1 className="font-semibold mb-3" style={{ color: '#04304B', fontSize: 18 }}>Fees</h1>
       <p className="mb-4 text-sm" style={{ color: '#6B7280' }}>View fees by transaction or by date range.</p>
 

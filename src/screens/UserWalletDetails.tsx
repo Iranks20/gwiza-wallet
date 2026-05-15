@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { useParams } from 'react-router'
 import { Link } from '@/lib'
 import Components from '../components'
+import { Table } from '@/components/ui/table'
 
 const stubWallet = { id: 'WLT-001', currency: 'KES', balance: '45,200.00', ledgerBalance: '45,200.00', status: 'active' }
 const stubTxns = [
@@ -20,7 +21,7 @@ export default function UserWalletDetails() {
   const w = stubWallet
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <div className="mb-4 flex items-center gap-2">
         <Link to="/user/wallets" className="text-sm cursor-pointer" style={{ color: '#37BBA2' }}>← My Wallets</Link>
       </div>
@@ -81,7 +82,7 @@ export default function UserWalletDetails() {
 
       {tab === 'transactions' && (
         <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
-          <table className="w-full">
+          <Table className="w-full min-w-max">
             <thead>
               <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
                 {['Txn ID', 'Type', 'Amount', 'Status', 'Date'].map(h => (
@@ -102,13 +103,13 @@ export default function UserWalletDetails() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
       )}
 
       {tab === 'fees' && (
         <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
-          <table className="w-full">
+          <Table className="w-full min-w-max">
             <thead>
               <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
                 {['Txn ID', 'Type', 'Amount', 'Date'].map(h => (
@@ -126,7 +127,7 @@ export default function UserWalletDetails() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
       )}
     </div>

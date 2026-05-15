@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Link } from '@/lib'
 import {
   Wallet, ArrowLeftRight, DollarSign, XCircle, ShieldAlert,
-  TrendingUp, TrendingDown, ExternalLink
+  TrendingUp, TrendingDown, ExternalLink, Loader2
 } from 'lucide-react'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts'
@@ -225,7 +225,12 @@ export default function AdminDashboard() {
             <span className="text-meta px-3 py-1.5 rounded-lg font-medium bg-primary-muted text-primary w-fit">Weekly</span>
           </div>
           {loading ? (
-            <div className="h-52 flex items-center justify-center text-muted-foreground text-body">Loading chart...</div>
+            <div className="h-52 flex items-center justify-center">
+              <div className="inline-flex items-center gap-2 text-muted-foreground text-body">
+                <Loader2 size={16} className="animate-spin" />
+                <span>Loading chart...</span>
+              </div>
+            </div>
           ) : (
             <ChartContainer config={{ txns: { color: 'var(--primary)' }, fees: { color: 'var(--chart-2)' } }} className="h-52">
               <AreaChart data={chartData.length ? chartData : [{ day: '—', txns: 0, fees: 0 }]}>
@@ -258,7 +263,12 @@ export default function AdminDashboard() {
           </div>
           <div className="divide-y divide-border">
             {loading ? (
-              <div className="px-6 py-8 text-center text-muted-foreground text-body">Loading...</div>
+              <div className="px-6 py-8 text-center">
+                <div className="inline-flex items-center gap-2 text-muted-foreground text-body">
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Loading recent transactions...</span>
+                </div>
+              </div>
             ) : recentTxns.length === 0 ? (
               <div className="px-6 py-8 text-center text-muted-foreground text-body">No recent transactions</div>
             ) : (
@@ -289,7 +299,12 @@ export default function AdminDashboard() {
           </div>
           <div className="divide-y divide-border">
             {loading ? (
-              <div className="px-6 py-8 text-center text-muted-foreground text-body">Loading...</div>
+              <div className="px-6 py-8 text-center">
+                <div className="inline-flex items-center gap-2 text-muted-foreground text-body">
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Loading recent audit actions...</span>
+                </div>
+              </div>
             ) : auditLogs.length === 0 ? (
               <div className="px-6 py-8 text-center text-muted-foreground text-body">No recent audit logs</div>
             ) : (

@@ -2,13 +2,14 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router'
 import Components from '../components'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Loader2 } from 'lucide-react'
 import type { ProfileTypeGroupPermission } from '@/services/groupPermissionsService'
 import { listGroupPermissions, createGroupPermission, updateGroupPermission, removeGroupPermission } from '@/services/groupPermissionsService'
 import type { PermissionCatalogItem } from '@/services/permissionsCatalogService'
 import { listPermissionsCatalog } from '@/services/permissionsCatalogService'
 import { getProfileTypeGroupById } from '@/services/profileTypeGroupsService'
 import { ApiError } from '@/api/client'
+import { Table } from '@/components/ui/table'
 
 export default function AdminGroupPermissions({ embedded, countryId: countryIdProp, groupId: groupIdProp }: { country?: string; embedded?: boolean; countryId?: number; groupId?: number }) {
   const params = useParams<{ groupId?: string; countryId?: string }>()
@@ -145,7 +146,7 @@ export default function AdminGroupPermissions({ embedded, countryId: countryIdPr
   }
 
   const content = (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       {embedded && profileTypeGroupsListPath && (
         <div className="mb-4">
           <Link to={profileTypeGroupsListPath} className="text-sm cursor-pointer" style={{ color: '#37BBA2' }}>← Back to Profile Type Groups</Link>
@@ -197,10 +198,15 @@ export default function AdminGroupPermissions({ embedded, countryId: countryIdPr
                 </select>
               </div>
             </div>
-            {loading && <p className="mb-2 text-sm" style={{ color: '#6B7280' }}>Loading permissions…</p>}
+            {loading && (
+              <div className="mb-2 inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Loading permissions...</span>
+              </div>
+            )}
             {!loading && (
               <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                <table className="w-full">
+                <Table className="w-full min-w-max">
                   <thead>
                     <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
                       {['Permission', 'Scope', 'Status', 'Assigned on', 'Actions'].map(h => (
@@ -244,8 +250,10 @@ export default function AdminGroupPermissions({ embedded, countryId: countryIdPr
                               </button>
                               <button
                                 onClick={() => setDeleteId(a.id)}
-                                className="p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
+                                className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-red-50 cursor-pointer"
                                 style={{ color: '#F44336' }}
+                                title="Remove group permission"
+                                aria-label="Remove group permission"
                               >
                                 <Trash2 size={14} />
                               </button>
@@ -262,7 +270,7 @@ export default function AdminGroupPermissions({ embedded, countryId: countryIdPr
                       </tr>
                     )}
                   </tbody>
-                </table>
+                </Table>
               </div>
             )}
           </div>
@@ -285,10 +293,13 @@ export default function AdminGroupPermissions({ embedded, countryId: countryIdPr
               <p className="mb-2 text-xs" style={{ color: '#B91C1C' }}>{catalogError}</p>
             )}
             {catalogLoading ? (
-              <p className="text-sm" style={{ color: '#6B7280' }}>Loading permissions catalog…</p>
+              <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Loading permissions catalog...</span>
+              </div>
             ) : (
               <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
-                <table className="w-full">
+                <Table className="w-full min-w-max">
                   <thead>
                     <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
                       {['Permission', 'Scope', 'Tag', 'Status', 'Action'].map(h => (
@@ -339,7 +350,7 @@ export default function AdminGroupPermissions({ embedded, countryId: countryIdPr
                       </tr>
                     )}
                   </tbody>
-                </table>
+                </Table>
               </div>
             )}
           </div>

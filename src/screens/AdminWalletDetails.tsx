@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router'
 import { Link } from '@/lib'
 import Components from '../components'
+import { Table } from '@/components/ui/table'
 import { getWalletById, updateWallet } from '@/services/walletsService'
 import { listCountries } from '@/services'
-import { Edit2, X } from 'lucide-react'
+import { Edit2, X, Loader2 } from 'lucide-react'
 import { ApiError } from '@/api/client'
 import { listTransactions } from '@/services/transactionRegisterService'
 import type { TxnRegisterEntry } from '@/services/transactionRegisterService'
@@ -135,18 +136,23 @@ export default function AdminWalletDetails() {
 
   if (loading) {
     return (
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div>
         <div className="mb-4">
           <Link to="/admin/wallets" className="text-sm cursor-pointer" style={{ color: '#37BBA2' }}>← Wallets</Link>
         </div>
-        <div className="p-8 text-center" style={{ color: '#6B7280', fontSize: 14 }}>Loading wallet...</div>
+        <div className="p-8 text-center">
+          <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+            <Loader2 size={16} className="animate-spin" />
+            <span>Loading wallet...</span>
+          </div>
+        </div>
       </div>
     )
   }
 
   if (error || !wallet) {
     return (
-      <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div>
         <div className="mb-4">
           <Link to="/admin/wallets" className="text-sm cursor-pointer" style={{ color: '#37BBA2' }}>← Wallets</Link>
         </div>
@@ -220,7 +226,7 @@ export default function AdminWalletDetails() {
   const editFieldErrStyle = { color: '#B91C1C', fontSize: 12, marginTop: 4 } as const
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <div className="mb-4 flex items-center gap-2">
         <Link to="/admin/wallets" className="text-sm cursor-pointer" style={{ color: '#37BBA2' }}>← Wallets</Link>
       </div>
@@ -292,12 +298,17 @@ export default function AdminWalletDetails() {
           </div>
         )}
         {txnLoading ? (
-          <div className="p-6 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading transactions...</div>
+          <div className="p-6 text-center">
+            <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+              <Loader2 size={16} className="animate-spin" />
+              <span>Loading transactions...</span>
+            </div>
+          </div>
         ) : txns.length === 0 ? (
           <div className="p-4 text-center" style={{ color: '#6B7280', fontSize: 13 }}>No transactions found for this wallet.</div>
         ) : (
           <>
-            <table className="w-full">
+            <Table className="w-full min-w-max">
               <thead>
                 <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
                   {['Txn ID', 'Type', 'Amount', 'Status', 'Date'].map(h => (
@@ -316,7 +327,7 @@ export default function AdminWalletDetails() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </Table>
             {txnPagination && (
               <div className="flex items-center justify-between mt-3">
                 <span style={{ color: '#9CA3AF', fontSize: 12 }}>
@@ -343,7 +354,7 @@ export default function AdminWalletDetails() {
       {editOpen && editState && (
         <div className="fixed inset-0 z-50 flex">
           <div className="flex-1 bg-black/40" onClick={() => setEditOpen(false)} />
-          <div className="w-96 bg-white h-full shadow-2xl flex flex-col overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
+          <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
               <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>Edit Wallet</h2>
               <button onClick={() => setEditOpen(false)} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg"><X size={18} /></button>

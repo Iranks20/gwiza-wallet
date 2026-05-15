@@ -6,7 +6,7 @@ const stubResponse = { status: 'ready', timestamp: new Date().toISOString(), che
 
 export default function AdminReady() {
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <Components.AdminPageHeader
         title="Ready"
         subtitle="Readiness probe — is the service ready to accept traffic?"

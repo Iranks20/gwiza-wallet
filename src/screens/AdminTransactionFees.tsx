@@ -9,6 +9,9 @@ import {
   updateTransactionFee,
 } from '@/services/transactionFeesService'
 import { listTransactionRules } from '@/services/transactionRulesService'
+import { Table } from '@/components/ui/table'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const emptyForm: Omit<TxnFee, 'id'> = {
   txnRuleId: 0,
@@ -58,7 +61,7 @@ function FeeDrawer({ open, onClose, fee, ruleOptions, defaultRuleId, onSave }: F
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-96 bg-white h-full shadow-2xl flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>{fee ? 'Edit Fee' : 'Add Fee'}</h2>
           <button onClick={onClose} className="cursor-pointer hover:bg-gray-100 p-1 rounded-lg"><X size={18} /></button>
@@ -173,7 +176,7 @@ export default function AdminTransactionFees({ country, embedded, ruleId }: { co
   const filtered = fees.filter(f => !ruleId || f.txnRuleId === ruleId)
 
   const content = (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       {!embedded && (
         <Components.AdminPageHeader
           title="Transaction Fees"
@@ -191,12 +194,17 @@ export default function AdminTransactionFees({ country, embedded, ruleId }: { co
       )}
 
       <div className="flex flex-wrap items-center gap-3 mb-5">
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2.5 border rounded-xl text-sm cursor-pointer outline-none" style={{ borderColor: '#E5E7EB', color: '#04304B', fontSize: 13 }}>
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{filtered.length} fees</span>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+        <span style={{ color: '#6B7280', fontSize: 13 }}>{filtered.length} fees</span>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
@@ -204,7 +212,7 @@ export default function AdminTransactionFees({ country, embedded, ruleId }: { co
           <div className="px-5 py-3 border-b" style={{ borderColor: '#E5E7EB', background: '#FAFBFC' }}>
             <span style={{ color: '#6B7280', fontSize: 13 }}>Configured Fees</span>
           </div>
-          <table className="w-full">
+          <Table className="w-full min-w-max">
             <thead>
               <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
                 {['Rule', 'Fee Type', 'Amount Range', 'Value', 'Status', 'Actions'].map(h => (
@@ -222,7 +230,7 @@ export default function AdminTransactionFees({ country, embedded, ruleId }: { co
                   <td className="px-4 py-3"><Components.StatusBadge status={f.status} size="sm" /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => { setEditFee(f); setDrawerOpen(true) }} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
+                      <button onClick={() => { setEditFee(f); setDrawerOpen(true) }} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }} title="Edit fee" aria-label="Edit fee"><Edit2 size={14} /></button>
                       <button onClick={() => toggleStatus(f)} className="px-2 py-1 rounded-lg text-xs font-medium cursor-pointer" style={{ background: f.status === 'active' ? '#FEE2E2' : '#D1FAE5', color: f.status === 'active' ? '#B91C1C' : '#047857' }}>
                         {f.status === 'active' ? 'Deactivate' : 'Activate'}
                       </button>
@@ -231,7 +239,7 @@ export default function AdminTransactionFees({ country, embedded, ruleId }: { co
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
 
         <div className="rounded-xl border p-5" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
@@ -240,7 +248,7 @@ export default function AdminTransactionFees({ country, embedded, ruleId }: { co
           <div className="space-y-3 mb-4">
             <div>
               <label className="block text-xs font-medium mb-1" style={{ color: '#6B7280' }}>Amount</label>
-              <input value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-2.5 border rounded-lg text-sm outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+              <Input value={amount} onChange={e => setAmount(e.target.value)} className="text-sm" />
             </div>
           </div>
           <button onClick={() => {

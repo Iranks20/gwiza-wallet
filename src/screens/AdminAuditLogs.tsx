@@ -1,14 +1,15 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react'
 import Components from '../components'
-import { Eye, X } from 'lucide-react'
+import { Eye, X, Loader2 } from 'lucide-react'
 import { listAuditLogs } from '@/services/transactionAuditLogsService'
 import type { TxnAuditLog } from '@/services/transactionAuditLogsService'
+import { Table } from '@/components/ui/table'
 
 function LogDetailModal({ log, onClose }: { log: TxnAuditLog; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md" style={{ fontFamily: "'Poppins', sans-serif", boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+      <div className="bg-white rounded-2xl w-full max-w-md" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-bold" style={{ color: '#04304B', fontSize: 18 }}>Audit Log Detail</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={18} /></button>
@@ -25,7 +26,7 @@ function LogDetailModal({ log, onClose }: { log: TxnAuditLog; onClose: () => voi
               ['When', log.dateCreated ? new Date(log.dateCreated).toLocaleString() : '—'],
             ].map(([k, v], i) => (
             <div key={i} className="flex justify-between py-2 border-b" style={{ borderColor: '#F3F4F6' }}>
-              <span style={{ color: '#9CA3AF', fontSize: 13 }}>{k}</span>
+              <span style={{ color: '#6B7280', fontSize: 13 }}>{k}</span>
               <span className="font-medium" style={{ color: '#04304B', fontSize: 13 }}>{String(v)}</span>
             </div>
           ))}
@@ -95,7 +96,7 @@ export default function AdminAuditLogs() {
   }, [logs, actionFilter])
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <Components.AdminPageHeader
         title="Audit Logs"
         subtitle="Traceable history of configuration and operational actions in the system"
@@ -112,7 +113,7 @@ export default function AdminAuditLogs() {
         </select>
         <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1) }} className="px-3 py-2 border rounded-lg text-sm outline-none" style={{ borderColor: '#E5E7EB', color: '#04304B' }} />
         <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1) }} className="px-3 py-2 border rounded-lg text-sm outline-none" style={{ borderColor: '#E5E7EB', color: '#04304B' }} />
-        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{loading ? '...' : `${filtered.length} results`}</span>
+        <span style={{ color: '#6B7280', fontSize: 13 }}>{loading ? 'Loading audit logs...' : `${filtered.length} results`}</span>
       </div>
 
       {error && (
@@ -120,7 +121,7 @@ export default function AdminAuditLogs() {
       )}
 
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
               {['User', 'Action', 'Txn ID', 'Previous status', 'New status', 'When', ''].map(h => (
@@ -131,7 +132,12 @@ export default function AdminAuditLogs() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center" style={{ color: '#6B7280', fontSize: 14 }}>Loading audit logs...</td>
+                <td colSpan={7} className="px-4 py-8 text-center">
+                  <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Loading audit logs...</span>
+                  </div>
+                </td>
               </tr>
             ) : (
               filtered.map(r => (
@@ -141,18 +147,18 @@ export default function AdminAuditLogs() {
                   <td className="px-4 py-3"><span className="font-mono" style={{ color: '#37BBA2', fontSize: 12 }}>{r.txnId ?? '—'}</span></td>
                   <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{r.previousStatus || '—'}</span></td>
                   <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{r.newStatus || '—'}</span></td>
-                  <td className="px-4 py-3"><span style={{ color: '#9CA3AF', fontSize: 11 }}>{r.dateCreated ? new Date(r.dateCreated).toLocaleString() : '—'}</span></td>
+                  <td className="px-4 py-3"><span style={{ color: '#6B7280', fontSize: 12 }}>{r.dateCreated ? new Date(r.dateCreated).toLocaleString() : '—'}</span></td>
                   <td className="px-4 py-3">
-                    <button onClick={() => setSelectedLog(r)} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }} title="View details"><Eye size={14} /></button>
+                    <button onClick={() => setSelectedLog(r)} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }} title="View details" aria-label="View audit log details"><Eye size={14} /></button>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
-        </table>
+        </Table>
         {pagination && !loading && (
           <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: '#E5E7EB' }}>
-            <span style={{ color: '#9CA3AF', fontSize: 13 }}>
+            <span style={{ color: '#6B7280', fontSize: 13 }}>
               Showing {(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
             </span>
             <div className="flex gap-1">

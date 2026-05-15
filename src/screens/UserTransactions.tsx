@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { Link } from '@/lib'
 import Components from '../components'
+import { Table } from '@/components/ui/table'
 
 const rows = [
   { id: 'TXN-001842', type: 'Received from John', amount: '+KES 12,500', status: 'completed', date: '2024-03-20 14:22' },
@@ -22,7 +23,7 @@ export default function UserTransactions() {
   })
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <h1 className="font-semibold mb-3" style={{ color: '#04304B', fontSize: 18 }}>Transaction History</h1>
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -37,7 +38,7 @@ export default function UserTransactions() {
       </div>
 
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}>
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
               {['Txn ID', 'Type', 'Amount', 'Status', 'Date'].map(h => (
@@ -68,7 +69,7 @@ export default function UserTransactions() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import Components from '../components'
-import { Plus, Edit2, Trash2, X } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Loader2 } from 'lucide-react'
 import type { PermissionCatalogItem } from '@/services/permissionsCatalogService'
 import {
   listPermissionsCatalog,
@@ -9,6 +9,7 @@ import {
   updatePermissionCatalog,
   removePermissionCatalog,
 } from '@/services/permissionsCatalogService'
+import { Table } from '@/components/ui/table'
 
 const emptyForm: Omit<PermissionCatalogItem, 'id'> = { code: '', scope: 'wallet', tag: 'read_only', description: '', status: 'active' }
 
@@ -42,7 +43,7 @@ function PermissionDrawer({ open, onClose, permission, onSave }: PermissionDrawe
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-96 bg-white h-full shadow-2xl flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>
             {permission ? 'Edit Permission' : 'Add Permission'}
@@ -61,7 +62,7 @@ function PermissionDrawer({ open, onClose, permission, onSave }: PermissionDrawe
               onFocus={e => e.target.style.borderColor = '#37BBA2'}
               onBlur={e => e.target.style.borderColor = '#E5E7EB'}
             />
-            <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>Min 5, max 255 characters</p>
+            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>Min 5, max 255 characters</p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: '#04304B', fontSize: 13 }}>Scope</label>
@@ -168,7 +169,7 @@ export default function AdminPermissions() {
   }
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <Components.AdminPageHeader
         title="Profile Permissions"
         subtitle="Fine-grained permissions used to control access across backoffice"
@@ -191,14 +192,14 @@ export default function AdminPermissions() {
           <option value="all">All Tags</option>
           {TAGS.map(t => (<option key={t} value={t}>{t}</option>))}
         </select>
-        <span style={{ color: '#9CA3AF', fontSize: 13 }}>{loading ? 'Loading...' : `${permissions.length} results`}</span>
+        <span style={{ color: '#6B7280', fontSize: 13 }}>{loading ? 'Loading permissions...' : `${permissions.length} results`}</span>
       </div>
 
       <div
         className="rounded-xl border overflow-hidden"
         style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
       >
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
               {['Name', 'Scope', 'Tag', 'Status', 'Actions'].map(h => (
@@ -208,7 +209,14 @@ export default function AdminPermissions() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</td></tr>
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center">
+                  <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Loading permissions...</span>
+                  </div>
+                </td>
+              </tr>
             ) : (
               permissions.map(p => (
               <tr key={p.id} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
@@ -226,10 +234,10 @@ export default function AdminPermissions() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <button onClick={() => { setEditPermission(p); setDrawerOpen(true) }} className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }}>
+                    <button onClick={() => { setEditPermission(p); setDrawerOpen(true) }} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-teal-50 cursor-pointer" style={{ color: '#37BBA2' }} title="Edit permission" aria-label="Edit permission">
                       <Edit2 size={14} />
                     </button>
-                    <button onClick={() => setDeleteId(p.id)} className="p-1.5 rounded-lg hover:bg-red-50 cursor-pointer" style={{ color: '#F44336' }}>
+                    <button onClick={() => setDeleteId(p.id)} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-red-50 cursor-pointer" style={{ color: '#F44336' }} title="Delete permission" aria-label="Delete permission">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -238,7 +246,7 @@ export default function AdminPermissions() {
             ))
             )}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       <PermissionDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} permission={editPermission} onSave={handleSave} />

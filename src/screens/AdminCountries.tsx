@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from 'react'
 import Components from '../components'
 import { Link } from '@/lib'
-import { Plus, Search, Edit2, X, Settings2, Power, PowerOff } from 'lucide-react'
+import { Plus, Search, Edit2, X, Settings2, Power, PowerOff, Loader2 } from 'lucide-react'
 import type { Country } from '@/services/countriesService'
 import { listCountries, createCountry, updateCountry, deactivateCountry, activateCountry } from '@/services/countriesService'
 import { listCurrencies } from '@/services/currenciesService'
 import type { Currency } from '@/services/currenciesService'
 import { ApiError } from '@/api/client'
 import { validateCountryForm, type FieldErrors } from '@/lib/countryFormValidation'
+import { Table } from '@/components/ui/table'
 
 const emptyForm: Omit<Country, 'id'> = { name: '', alpha2: '', alpha3: '', numeric: '', currency: '', status: 'active', dial: '', flag: '' }
 
@@ -65,7 +66,7 @@ function CountryDrawer({ open, onClose, country, onSave, saving, currencies }: D
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-96 bg-white h-full shadow-2xl flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>
             {country ? 'Edit Country' : 'Add Country'}
@@ -158,8 +159,19 @@ export default function AdminCountries() {
   const [statusModal, setStatusModal] = useState<{ id: number; action: 'deactivate' | 'activate' } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  const loadCountries = () => listCountries().then(setCountries).catch(() => {})
+  const loadCountries = async () => {
+    setLoading(true)
+    try {
+      const items = await listCountries()
+      setCountries(items)
+    } catch {
+      setCountries([])
+    } finally {
+      setLoading(false)
+    }
+  }
   const loadCurrencies = () => listCurrencies().then(setCurrencies).catch(() => {})
   useEffect(() => { loadCountries(); loadCurrencies() }, [])
   useEffect(() => { if (drawerOpen) loadCurrencies() }, [drawerOpen])
@@ -202,7 +214,7 @@ export default function AdminCountries() {
   })
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
         <Components.AdminPageHeader
           title="Countries"
           subtitle="Manage reference country data for the platform"
@@ -218,7 +230,7 @@ export default function AdminCountries() {
 
         <div className="flex items-center gap-3 mb-5">
           <div className="relative flex-1 max-w-xs">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6B7280' }} />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -239,11 +251,11 @@ export default function AdminCountries() {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-          <span className="text-sm" style={{ color: '#9CA3AF', fontSize: 13 }}>{filtered.length} results</span>
+          <span className="text-sm" style={{ color: '#6B7280', fontSize: 13 }}>{filtered.length} results</span>
         </div>
 
         <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <table className="w-full">
+          <Table className="w-full min-w-max">
             <thead>
               <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
                 {['Flag', 'Country Name', 'Alpha-2', 'Alpha-3', 'Currency', 'Calling Code', 'Status', 'Actions'].map(h => (
@@ -252,7 +264,16 @@ export default function AdminCountries() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((c) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-10 text-center">
+                    <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Loading countries...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filtered.map((c) => (
                 <tr key={c.id} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
                   <td className="px-4 py-3">
                     {c.flag ? (
@@ -281,7 +302,7 @@ export default function AdminCountries() {
                       </Link>
                       <button
                         onClick={() => { setEditCountry(c); setDrawerOpen(true) }}
-                        className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer transition-colors"
+                        className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-teal-50 cursor-pointer transition-colors"
                         style={{ color: '#37BBA2' }}
                       >
                         <Edit2 size={14} />
@@ -298,7 +319,7 @@ export default function AdminCountries() {
                       ) : (
                         <button
                           onClick={() => setStatusModal({ id: c.id, action: 'activate' })}
-                          className="p-1.5 rounded-lg hover:bg-green-50 cursor-pointer transition-colors"
+                          className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-green-50 cursor-pointer transition-colors"
                           style={{ color: '#22C55E' }}
                           title="Activate"
                         >
@@ -310,7 +331,7 @@ export default function AdminCountries() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
 
         <CountryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} country={editCountry} onSave={handleSave} saving={saving} currencies={currencies} />

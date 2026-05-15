@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import Components from '../components'
-import { Plus, Edit2, X } from 'lucide-react'
+import { Plus, Edit2, X, Loader2 } from 'lucide-react'
 import { useraccessrightsApi, type UserAccessRight } from '@/api/useraccessrights'
+import { Table } from '@/components/ui/table'
 
 type FormState = {
   menuLabel: string
@@ -119,7 +120,7 @@ function RightDrawer({
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-semibold" style={{ color: '#04304B', fontSize: 18 }}>
             {row ? 'Edit access right' : 'Add access right'}
@@ -298,7 +299,7 @@ export default function AdminUserAccessRights() {
   }, [page])
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <Components.AdminPageHeader
         title="User Access Rights"
         subtitle="Catalog of menu keys and routes used for access control and User Access Levels"
@@ -328,8 +329,8 @@ export default function AdminUserAccessRights() {
         className="rounded-xl border overflow-hidden"
         style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
       >
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px]">
+        <div>
+          <Table className="min-w-[900px]">
             <thead>
               <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #E5E7EB' }}>
                 {['Label', 'menu_key', 'Route', 'parent_key', 'sort', 'Group', 'On menu', 'Actions'].map((h) => (
@@ -342,8 +343,11 @@ export default function AdminUserAccessRights() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center" style={{ color: '#6B7280', fontSize: 13 }}>
-                    Loading...
+                  <td colSpan={8} className="px-4 py-8 text-center">
+                    <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Loading access rights...</span>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -383,8 +387,10 @@ export default function AdminUserAccessRights() {
                           setEditRow(r)
                           setDrawerOpen(true)
                         }}
-                        className="p-1.5 rounded-lg hover:bg-teal-50 cursor-pointer"
+                        className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-teal-50 cursor-pointer"
                         style={{ color: '#37BBA2' }}
+                        title="Edit access right"
+                        aria-label="Edit access right"
                       >
                         <Edit2 size={14} />
                       </button>
@@ -393,7 +399,7 @@ export default function AdminUserAccessRights() {
                 ))
               )}
             </tbody>
-          </table>
+          </Table>
         </div>
 
         {pagination && pagination.totalPages > 1 && (

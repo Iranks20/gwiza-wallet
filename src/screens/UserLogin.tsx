@@ -8,26 +8,20 @@ import TwoFactorVerification from '@/components/TwoFactorVerification'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 
-const DEMO_USER_IDENTIFIER = '+250781234567'
-const DEMO_USER_PASSWORD = 'User123!'
-
 export default function UserLogin() {
   const navigate = useNavigate()
   const auth = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const show2FA = auth.pending2FA?.loginType === 'user'
-  const [identifier, setIdentifier] = useState(DEMO_USER_IDENTIFIER)
-  const [password, setPassword] = useState(DEMO_USER_PASSWORD)
+  const [identifier, setIdentifier] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [googleError, setGoogleError] = useState<string | null>(null)
+  const credentialsLoginEnabled = false
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (identifier === DEMO_USER_IDENTIFIER && password === DEMO_USER_PASSWORD) {
-      navigate('/user/overview')
-    } else {
-      setError('Invalid wallet credentials. Use +250781234567 / User123!')
-    }
+    setError('Password login is currently disabled. Use Google sign-in to continue.')
   }
 
   const handleGoogleError = (err: Error) => {
@@ -45,10 +39,6 @@ export default function UserLogin() {
           <p className="text-center text-caption text-muted-foreground">Sign in to your wallet account.</p>
         </div>
 
-        <p className="mb-4 text-meta text-center text-muted-foreground">
-          Demo: <span className="text-foreground font-medium">{DEMO_USER_IDENTIFIER}</span> / <span className="text-foreground font-medium">{DEMO_USER_PASSWORD}</span>
-        </p>
-
         {(error || googleError) && (
           <div className="mb-4 px-4 py-3 rounded-lg bg-error-muted text-error text-body border border-error/30">
             {error || googleError}
@@ -63,7 +53,6 @@ export default function UserLogin() {
               value={identifier}
               onChange={e => setIdentifier(e.target.value)}
               className="w-full px-3.5 py-3 border border-input rounded-lg text-body text-foreground bg-background placeholder:text-muted-foreground transition-all duration-150"
-              placeholder="+2507..."
             />
           </div>
           <div>
@@ -74,7 +63,6 @@ export default function UserLogin() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="w-full px-3.5 py-3 border border-input rounded-lg text-body text-foreground bg-background placeholder:text-muted-foreground pr-10 transition-all duration-150"
-                placeholder="••••••••"
               />
               <button
                 type="button"
@@ -96,7 +84,7 @@ export default function UserLogin() {
             </Link>
           </div>
 
-          <Button type="submit" className="w-full py-3.5 text-body font-medium">
+          <Button type="submit" disabled={!credentialsLoginEnabled} className="w-full py-3.5 text-body font-medium disabled:cursor-not-allowed">
             Login
           </Button>
         </form>

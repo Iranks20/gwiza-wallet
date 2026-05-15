@@ -6,7 +6,7 @@ export default function UserFeesByTransaction() {
   const [txnId, setTxnId] = useState('')
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <div className="mb-4">
         <Link to="/user/fees" className="text-sm cursor-pointer" style={{ color: '#37BBA2' }}>← Fees</Link>
       </div>

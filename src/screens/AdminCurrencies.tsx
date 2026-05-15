@@ -1,9 +1,10 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import Components from '../components'
-import { Plus, Edit2, Trash2, X, Search } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Search, Loader2 } from 'lucide-react'
 import type { Currency } from '@/services/currenciesService'
 import { listCurrencies, createCurrency, updateCurrency, removeCurrency } from '@/services/currenciesService'
+import { Table } from '@/components/ui/table'
 
 const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/
 
@@ -26,7 +27,7 @@ function CurrencyDrawer({
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-full max-w-md bg-white h-full flex flex-col shadow-2xl" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md bg-white h-full flex flex-col shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h2 className="font-bold" style={{ color: '#04304B', fontSize: 18 }}>{isEdit ? 'Edit Currency' : 'Add Currency'}</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={18} /></button>
@@ -49,7 +50,7 @@ function CurrencyDrawer({
               onFocus={e => !isEdit && (e.target.style.borderColor = '#37BBA2')}
               onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
             />
-            <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>ISO 4217 3-letter code{isEdit ? ' (read-only)' : ''}</p>
+            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>ISO 4217 3-letter code{isEdit ? ' (read-only)' : ''}</p>
           </div>
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: '#04304B' }}>Currency Name</label>
@@ -142,7 +143,7 @@ export default function AdminCurrencies() {
   }
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <Components.AdminPageHeader
         title="Currencies"
         subtitle="Manage supported currencies across the platform"
@@ -158,17 +159,17 @@ export default function AdminCurrencies() {
 
       <div className="flex items-center gap-3 mb-5">
         <div className="relative flex-1 max-w-sm">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6B7280' }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search code or name..." className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm outline-none" style={{ borderColor: '#E5E7EB', fontSize: 13 }} onFocus={e => e.target.style.borderColor = '#37BBA2'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
         </div>
-        <span className="text-sm" style={{ color: '#9CA3AF', fontSize: 13 }}>{filtered.length} results</span>
+        <span className="text-sm" style={{ color: '#6B7280', fontSize: 13 }}>{filtered.length} results</span>
       </div>
 
       <div className="rounded-xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         <div className="px-5 py-3 border-b" style={{ borderColor: '#E5E7EB', background: '#FAFBFC' }}>
-          <span style={{ color: '#6B7280', fontSize: 13 }}>{loading ? 'Loading...' : `${filtered.length} currencies`}</span>
+          <span style={{ color: '#6B7280', fontSize: 13 }}>{loading ? 'Loading currencies...' : `${filtered.length} currencies`}</span>
         </div>
-        <table className="w-full">
+        <Table className="w-full min-w-max">
           <thead>
             <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
               {['Code', 'Name', 'Actions'].map(h => (
@@ -178,7 +179,14 @@ export default function AdminCurrencies() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={3} className="px-5 py-8 text-center" style={{ color: '#6B7280', fontSize: 13 }}>Loading...</td></tr>
+              <tr>
+                <td colSpan={3} className="px-5 py-8 text-center">
+                  <div className="inline-flex items-center gap-2" style={{ color: '#6B7280', fontSize: 13 }}>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Loading currencies...</span>
+                  </div>
+                </td>
+              </tr>
             ) : (
               filtered.map((c) => (
                 <tr key={c.code} className="border-b hover:bg-gray-50 transition-colors" style={{ borderColor: '#F3F4F6' }}>
@@ -186,15 +194,15 @@ export default function AdminCurrencies() {
                   <td className="px-5 py-3"><span style={{ color: '#04304B', fontSize: 13 }}>{c.name}</span></td>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setDrawer({ open: true, item: c })} className="p-1.5 hover:bg-teal-50 rounded-lg cursor-pointer transition-colors" style={{ color: '#37BBA2' }}><Edit2 size={14} /></button>
-                      <button onClick={() => setDeleteConfirm(c.code)} className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer transition-colors" style={{ color: '#F44336' }}><Trash2 size={14} /></button>
+                      <button onClick={() => setDrawer({ open: true, item: c })} className="w-11 h-11 inline-flex items-center justify-center hover:bg-teal-50 rounded-lg cursor-pointer transition-colors" style={{ color: '#37BBA2' }} title="Edit currency" aria-label="Edit currency"><Edit2 size={14} /></button>
+                      <button onClick={() => setDeleteConfirm(c.code)} className="w-11 h-11 inline-flex items-center justify-center hover:bg-red-50 rounded-lg cursor-pointer transition-colors" style={{ color: '#F44336' }} title="Delete currency" aria-label="Delete currency"><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {drawer.open && (
@@ -209,7 +217,7 @@ export default function AdminCurrencies() {
 
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl p-6 w-80 text-center" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-center" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#FEF2F2' }}>
               <Trash2 size={22} style={{ color: '#F44336' }} />
             </div>

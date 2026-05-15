@@ -11,7 +11,7 @@ const txns = [
 
 export default function UserHome() {
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div>
       <div className="mb-4 flex items-center justify-between gap-4">
         <div>
           <p className="text-xs mb-1" style={{ color: '#6B7280' }}>Available balance</p>
